@@ -95,14 +95,7 @@ export default function Dashboard() {
         }
     }
 
-    const handleGoalUpdate = async (newGoal: number) => {
-        try {
-            await api.put('/couples/settings', { monthly_savings_goal: newGoal })
-            setSavingsGoal(newGoal)
-        } catch (error) {
-            console.error("Erro ao atualizar meta", error)
-        }
-    }
+
 
     useEffect(() => {
         fetchData();
@@ -231,7 +224,6 @@ export default function Dashboard() {
                 <SavingsGoalCard
                     currentSavings={summary.total_income - summary.total_expenses}
                     savingsGoal={savingsGoal}
-                    onGoalUpdate={handleGoalUpdate}
                 />
             </div>
 

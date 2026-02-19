@@ -268,14 +268,12 @@ export default function Investments() {
         }
 
         try {
-            // Create asset with quantity 0 (handled by backend default or explicit logic if needed, but schema allows omit)
-            // We map the search result item to the expected backend payload
             const payload = {
                 symbol: item.symbol,
                 name: item.name,
-                asset_type: item.type || 'stock', // Default to stock if missing
-                market: item.market || 'BR', // Use market from search result or default to BR
-                sector: null, // We might not have this from search
+                asset_type: item.type || 'stock',
+                market: item.market || 'BR',
+                sector: null,
             }
 
             await api.post('/investments/assets', payload)
@@ -283,7 +281,7 @@ export default function Investments() {
             toast.success(`${item.symbol} adicionado à watchlist!`)
             setAssetSearchQuery('')
             setAssetSearchResults([])
-            fetchData() // Refresh to get the new ID and data
+            await fetchData()
         } catch (error) {
             console.error("Error adding to watchlist:", error)
             toast.error("Erro ao adicionar ativo")

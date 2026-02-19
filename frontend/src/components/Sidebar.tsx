@@ -6,7 +6,8 @@ import {
     FileText,
     Tag,
     Menu,
-    ChevronLeft
+    ChevronLeft,
+    Settings
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -32,7 +33,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
         { label: 'Equipe', path: '/team', icon: Users },
 
         { label: 'Investimentos', path: '/investments', icon: TrendingUp },
-        // { label: 'Configurações', path: '/workspace-settings', icon: Settings }, // Settings in header
+        { label: 'Configurações', path: '/workspace-settings', icon: Settings },
     ]
 
     return (

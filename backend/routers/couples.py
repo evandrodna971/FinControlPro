@@ -76,7 +76,7 @@ def delete_joint_goal(
 def get_workspace_settings(
     current_user: models.User = Depends(auth_service.get_current_active_user),
     db: Session = Depends(database.get_db),
-    workspace_id: int = Depends(auth_service.get_current_workspace)
+    workspace_id: Optional[int] = Depends(auth_service.get_current_workspace)
 ):
     """Get workspace settings for approval thresholds"""
     if not workspace_id:
@@ -89,7 +89,7 @@ def update_workspace_settings(
     settings: schemas_workspace.WorkspaceSettingsUpdate,
     current_user: models.User = Depends(auth_service.get_current_active_user),
     db: Session = Depends(database.get_db),
-    workspace_id: int = Depends(auth_service.get_current_workspace)
+    workspace_id: Optional[int] = Depends(auth_service.get_current_workspace)
 ):
     """Update workspace settings"""
     if not workspace_id:
@@ -98,7 +98,5 @@ def update_workspace_settings(
     return crud.update_workspace_settings(
         db=db,
         workspace_id=workspace_id,
-        approval_threshold=settings.approval_threshold,
-        require_both_approval=settings.require_both_approval,
         monthly_savings_goal=settings.monthly_savings_goal
     )

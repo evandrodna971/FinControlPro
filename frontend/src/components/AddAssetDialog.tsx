@@ -72,20 +72,7 @@ export function AddAssetDialog({ onAssetAdded }: AddAssetDialogProps) {
         setTransactions(transactions.map(t => t.id === id ? { ...t, [field]: value } : t))
     }
 
-    const addToWatchlistSilently = async (data: typeof assetData) => {
-        try {
-            await api.post('/investments/assets', {
-                symbol: data.symbol,
-                name: data.name,
-                asset_type: data.asset_type,
-                market: data.market,
-                sector: data.sector || null,
-                dividend_yield: 0,
-            })
-        } catch {
-            // Silencioso — não afeta o fluxo principal
-        }
-    }
+
 
     const handleSubmit = async () => {
         for (const tx of transactions) {
@@ -126,10 +113,23 @@ export function AddAssetDialog({ onAssetAdded }: AddAssetDialogProps) {
             toast.success(`${assetData.symbol} adicionado com sucesso!`)
             setOpen(false)
             resetForm()
-            onAssetAdded()
 
-            // Adiciona à watchlist de forma independente (não bloqueia nem afeta o fluxo acima)
-            addToWatchlistSilently(assetData)
+            // Adiciona à watchlist (quantity=0) para acompanhar cotações
+            try {
+                await api.post('/investments/assets', {
+                    symbol: assetData.symbol,
+                    name: assetData.name,
+                    asset_type: assetData.asset_type,
+                    market: assetData.market,
+                    sector: assetData.sector || null,
+                    dividend_yield: 0,
+                })
+            } catch {
+                // Silencioso — ativo pode já existir na watchlist
+            }
+
+            // Refresh após tudo estar persistido
+            onAssetAdded()
 
         } catch (error) {
             console.error(error)
