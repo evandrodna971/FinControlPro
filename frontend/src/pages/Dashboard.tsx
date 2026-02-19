@@ -279,9 +279,12 @@ export default function Dashboard() {
                 </CardContent>
             </Card>
 
-            <Link to="/add-transaction" className="fixed bottom-8 right-8 z-50 group">
-                <Button size="lg" className="rounded-full w-14 h-14 shadow-2xl bg-indigo-600 hover:bg-indigo-700 hover:scale-110 transition-all duration-300 flex items-center justify-center p-0 border-none">
-                    <Plus className="w-8 h-8 text-white group-hover:rotate-90 transition-transform duration-300" />
+            <Link to="/add-transaction" className="fixed bottom-8 right-8 z-50 group flex items-center gap-2">
+                <span className="bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 shadow-lg border border-slate-700 whitespace-nowrap">
+                    Criar Transação
+                </span>
+                <Button size="lg" className="rounded-full w-14 h-14 shadow-2xl bg-slate-900 hover:bg-slate-800 hover:scale-110 transition-all duration-300 flex items-center justify-center p-0 border border-slate-700">
+                    <Plus className="w-8 h-8 text-blue-400 group-hover:text-blue-300 group-hover:rotate-90 transition-transform duration-300" />
                 </Button>
             </Link>
         </div>
