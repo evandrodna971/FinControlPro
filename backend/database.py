@@ -33,18 +33,22 @@ def get_db():
 def create_tables():
     Base.metadata.create_all(bind=engine)
     
+from sqlalchemy import inspect
+
     # Auto-migration for new columns
     try:
-        with engine.connect() as conn:
-            # Check if icon column exists in categories
-            result = conn.execute(text("PRAGMA table_info(categories)"))
-            columns = [row[1] for row in result.fetchall()]
-            
-            if 'icon' not in columns:
-                print("Migrating: Adding 'icon' column to categories table...")
+        inspector = inspect(engine)
+        columns = [col['name'] for col in inspector.get_columns("categories")]
+        
+        if 'icon' not in columns:
+            print("Migrating: Adding 'icon' column to categories table...")
+            with engine.connect() as conn:
                 conn.execute(text("ALTER TABLE categories ADD COLUMN icon VARCHAR"))
                 conn.commit()
-                print("Migration successful.")
+            print("Migration successful.")
+                
+    except Exception as e:
+        print(f"Migration check failed: {e}")
                 
     except Exception as e:
         print(f"Migration check failed: {e}")
