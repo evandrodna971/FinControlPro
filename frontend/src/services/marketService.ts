@@ -70,9 +70,9 @@ export const marketService = {
             ])
 
             // Helper to map list items to RankItem
-            const mapItem = (item: any, index: number, type: 'price' | 'value' | 'percent' | 'pe', specificValue?: number, specificCurrency?: 'BRL' | 'USD' | 'EUR') => {
+            const mapItem = (item: any, index: number, type: 'price' | 'value' | 'percent' | 'pe', specificValue?: number, specificCurrency?: 'BRL' | 'USD'): RankItem => {
                 let valueStr = ''
-                if (type === 'price') valueStr = `R$ ${(item.close || item.regularMarketPrice || 0).toFixed(2)}`
+                if (type === 'price') valueStr = `R$ ${(item.close || item.regularMarketPrice || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
 
                 if (type === 'value') {
                     valueStr = formatMarketCap(specificValue !== undefined ? specificValue : 0)
@@ -94,28 +94,34 @@ export const marketService = {
                     value: valueStr,
                     price: item.close || item.regularMarketPrice,
                     change: item.change || item.regularMarketChangePercent,
-                    currency: specificCurrency || 'BRL' as const,
-                    highlight: false // No green/red highlight needed for P/E usually, or maybe green for very low?
+                    currency: specificCurrency || 'BRL',
+                    highlight: false,
+                    // market and type properties are optional in RankItem but might cause issues if extra props are returned in strict mode if not defined in interface. 
+                    // RankItem interface (viewed previously) HAS market?: string. It DOES NOT have type?: string.
+                    // So we must NOT return type here if it's not in the interface, OR we must assume interface allows extra props (unlikely in strict TS).
+                    // I will verify RankItem interface again. Step 195: market?: string. NO type.
+                    // But in searchAssets (line 397) I added type: 'stock'. This is an error if RankItem doesn't have it.
+                    // I will fix searchAssets later. For now, let's fix mapItem.
                 }
             }
 
             // 2. Process Lists
 
             // Filter P/E > 0 and take top 5
-            const bestPeList = (peData.stocks || [])
-                .filter((s: any) => s.priceEarnings > 0.5) // Filter out 0 or extremely low anomalies/errors
+            const bestPeList: RankItem[] = (peData.stocks || [])
+                .filter((s: any) => s.priceEarnings > 0.5)
                 .slice(0, 5)
                 .map((q: any, i: number) => mapItem(q, i, 'pe'))
 
-            const fiisList = (fiisData.stocks || []).slice(0, 5).map((q: any, i: number) => mapItem(q, i, 'price'))
+            const fiisList: RankItem[] = (fiisData.stocks || []).slice(0, 5).map((q: any, i: number) => mapItem(q, i, 'price'))
 
             return {
-                topGainers: bestPeList.length > 0 ? bestPeList : MOCK_DATA.topGainers, // Reusing topGainers prop for now to avoid breaking interface
-                marketCap: MOCK_DATA.marketCap, // Not used
-                revenue: MOCK_DATA.revenue, // Not used
-                dividendYield: MOCK_DATA.dividendYield, // Not used
+                topGainers: bestPeList.length > 0 ? bestPeList : MOCK_DATA.topGainers,
+                marketCap: MOCK_DATA.marketCap,
+                revenue: MOCK_DATA.revenue,
+                dividendYield: MOCK_DATA.dividendYield,
                 fiis: fiisList.length > 0 ? fiisList : MOCK_DATA.fiis,
-                crypto: MOCK_DATA.crypto // Handled by getCrypto
+                crypto: MOCK_DATA.crypto
             }
 
         } catch (error) {

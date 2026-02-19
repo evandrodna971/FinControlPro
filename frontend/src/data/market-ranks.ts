@@ -8,6 +8,7 @@ export interface RankItem {
     currency?: 'BRL' | 'USD'
     highlight?: boolean // For green badges/accents
     market?: string
+    type?: string
 }
 
 export const dividendYield: RankItem[] = [
