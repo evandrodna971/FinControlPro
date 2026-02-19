@@ -45,7 +45,7 @@ export function PriceAlertsManager() {
     const [alerts, setAlerts] = useState<Alert[]>([])
     const [assets, setAssets] = useState<Asset[]>([])
     const [isAdding, setIsAdding] = useState(false)
-    const [loading, setLoading] = useState(true)
+
 
     // Form state
     const [newAlert, setNewAlert] = useState({
@@ -70,8 +70,7 @@ export function PriceAlertsManager() {
         } catch (error) {
             console.error('Erro ao buscar dados:', error)
             toast.error('Erro ao carregar alertas')
-        } finally {
-            setLoading(false)
+
         }
     }
 
