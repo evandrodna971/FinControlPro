@@ -77,32 +77,27 @@ export function AssetDetailsModal({ asset, isOpen, onClose, currency, rates }: A
             setIsLoading(true)
             try {
                 // Determine type based on asset.type if available, or infer
-                // RankItem interface doesn't have type, so we guess.
-
+                // RankItem interface now has optional type?: string.
                 let type: 'stock' | 'crypto' | 'fii' = 'stock'
 
-                // Heuristics:
-                // Crypto: Usually symbol has no numbers and is short (BTC) or explicit match in list
-                // FII: Ends in 11 (mostly)
-                // Stock: Ends in 3, 4, 11 (unit), etc.
+                if (asset.type === 'crypto' || asset.type === 'fii' || asset.type === 'stock') {
+                    type = asset.type
+                } else {
+                    // Fallback Heuristics:
+                    const symbol = asset.symbol.toUpperCase()
+                    const cryptoSymbols = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'DOGE', 'ADA', 'AVAX']
 
-                const symbol = asset.symbol.toUpperCase()
-
-                // Known crypto symbols check (simple list)
-                const cryptoSymbols = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'DOGE', 'ADA', 'AVAX']
-
-                if (cryptoSymbols.includes(symbol) || (symbol.length <= 4 && !/\d/.test(symbol))) {
-                    type = 'crypto'
-                } else if (symbol.endsWith('11')) {
-                    // Could be Unit or FII. Brapi handles both as same endpoint mostly so 'stock' works, 
-                    // but let's be explicit if needed. For now 'stock' covers FIIs in Brapi usually.
-                    // But we can check if it's in our FII list.
-                    const fiiSymbols = ['HGLG11', 'KNRI11', 'MXRF11', 'XPLG11', 'BCFF11', 'VISC11', 'HGRU11', 'BRCR11']
-                    if (fiiSymbols.includes(symbol)) {
-                        type = 'fii'
+                    if (cryptoSymbols.includes(symbol) || (symbol.length <= 4 && !/\d/.test(symbol))) {
+                        type = 'crypto'
+                    } else if (symbol.endsWith('11')) {
+                        const fiiSymbols = ['HGLG11', 'KNRI11', 'MXRF11', 'XPLG11', 'BCFF11', 'VISC11', 'HGRU11', 'BRCR11']
+                        if (fiiSymbols.includes(symbol)) {
+                            type = 'fii'
+                        }
                     }
                 }
 
+                const symbol = asset.symbol.toUpperCase()
                 console.log(`Fetching history for ${symbol} as ${type} (${timeframe})`)
 
                 // Cast timeframe to any to avoid type error since 3M is custom here

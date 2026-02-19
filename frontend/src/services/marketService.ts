@@ -96,12 +96,7 @@ export const marketService = {
                     change: item.change || item.regularMarketChangePercent,
                     currency: specificCurrency || 'BRL',
                     highlight: false,
-                    // market and type properties are optional in RankItem but might cause issues if extra props are returned in strict mode if not defined in interface. 
-                    // RankItem interface (viewed previously) HAS market?: string. It DOES NOT have type?: string.
-                    // So we must NOT return type here if it's not in the interface, OR we must assume interface allows extra props (unlikely in strict TS).
-                    // I will verify RankItem interface again. Step 195: market?: string. NO type.
-                    // But in searchAssets (line 397) I added type: 'stock'. This is an error if RankItem doesn't have it.
-                    // I will fix searchAssets later. For now, let's fix mapItem.
+                    type: 'stock' // Default to stock for now, can be adjusted if needed
                 }
             }
 
