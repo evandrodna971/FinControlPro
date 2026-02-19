@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { format, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar as CalendarIcon } from 'lucide-react';
@@ -50,7 +50,7 @@ export function DatePicker({ value, onValueChange, label }: DatePickerProps) {
                         mode="single"
                         selected={date}
                         onSelect={handleSelect}
-                        locale={ptBR}
+                        locale={ptBR as any}
                         showOutsideDays
                         className="p-3"
                         modifiersClassNames={{

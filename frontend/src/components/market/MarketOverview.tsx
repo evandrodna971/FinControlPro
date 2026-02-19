@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { BarChart3, Building2, Coins, RefreshCw, ArrowUpRight, TrendingDown } from 'lucide-react'
+import { BarChart3, Building2, Coins, RefreshCw, TrendingDown } from 'lucide-react'
 import { RankCard } from '@/components/market/RankCard'
 import { AssetDetailsModal } from '@/components/market/AssetDetailsModal'
 import { marketService } from '@/services/marketService'

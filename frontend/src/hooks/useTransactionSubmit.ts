@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
-import { TransactionFormValues, transactionSchema } from '@/schemas/transactionSchema';
+import { transactionSchema } from '@/schemas/transactionSchema';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 
@@ -41,7 +41,7 @@ export function useTransactionSubmit({ onSuccess, editId }: UseTransactionSubmit
 
             if (error instanceof z.ZodError) {
                 // Formatting Zod errors
-                error.errors.forEach((err: any) => {
+                error.issues.forEach((err: any) => {
                     toast.error(`${err.path.join('.')}: ${err.message}`);
                 });
             } else {

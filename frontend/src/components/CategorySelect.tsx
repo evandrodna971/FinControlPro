@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { Check, ChevronsUpDown, Plus, Loader2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';

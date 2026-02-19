@@ -99,7 +99,7 @@ export const parseAssetValue = (valueStr: string): number => {
 }
 
 // @deprecated - Use marketService.getAssetHistory() for real data
-export const getHistoricalData = (symbol: string, timeframe: '1D' | '1M' | '1Y', baseValue?: number): ChartDataPoint[] => {
+export const getHistoricalData = (_symbol: string, timeframe: '1D' | '1M' | '1Y', baseValue?: number): ChartDataPoint[] => {
     const now = new Date()
     let points = 0
     let interval = 0 // minutes
