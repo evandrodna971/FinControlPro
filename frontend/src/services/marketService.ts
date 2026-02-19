@@ -15,8 +15,9 @@ const BRAPI_TOKEN = import.meta.env.VITE_BRAPI_TOKEN || 'vaojuu2uNboDzmhHXP6Sjg'
 // PROXY CONFIGURATION
 // We use the backend proxy to avoid CORS and Rate Limits in the browser.
 // The backend will forward the request to Brapi with the token securely.
-const BASE_URL_BRAPI = 'http://localhost:8000/api/proxy/brapi'
-// NOTE: In production this should be your production backend URL, or a relative path '/api/proxy/brapi' if served from same origin.
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const BASE_URL_BRAPI = `${API_URL}/api/proxy/brapi`
+// NOTE: VITE_API_URL should be set in .env or Render environment variables.
 
 function formatMarketCap(val: number | undefined): string {
     if (!val) return 'N/A'
@@ -223,7 +224,7 @@ export const marketService = {
             const yfRange = rangeMap[timeframe] || '3mo'
 
             try {
-                const response = await fetch(`http://localhost:8000/api/proxy/market/history?symbol=${symbol}&range=${yfRange}&interval=1d`)
+                const response = await fetch(`${API_URL}/api/proxy/market/history?symbol=${symbol}&range=${yfRange}&interval=1d`)
                 if (!response.ok) return []
 
                 // Process backend response to match expected format if needed
@@ -325,7 +326,7 @@ export const marketService = {
         if (!symbols.length) return []
         try {
             // New Backend Proxy for Market Data (Yahoo)
-            const response = await fetch(`http://localhost:8000/api/proxy/market/quote?symbols=${symbols.join(',')}`)
+            const response = await fetch(`${API_URL}/api/proxy/market/quote?symbols=${symbols.join(',')}`)
             if (!response.ok) return []
             const data = await response.json()
 
@@ -381,7 +382,7 @@ export const marketService = {
         // 2. US Stocks (Yahoo via Backend)
         if (query.length >= 2) {
             try {
-                const response = await fetch(`http://localhost:8000/api/proxy/market/search?query=${query}`)
+                const response = await fetch(`${API_URL}/api/proxy/market/search?query=${query}`)
                 if (response.ok) {
                     const usData = await response.json()
                     const usResults = usData.map((item: any, index: number) => ({
@@ -456,7 +457,7 @@ export const marketService = {
             // O backend faz o mapeamento símbolo -> CoinGecko ID
             try {
                 const symbolsParam = cryptos.join(',') // ex: "btc,eth,bitcoin"
-                const response = await fetch(`http://localhost:8000/api/proxy/market/crypto?symbols=${encodeURIComponent(symbolsParam)}`)
+                const response = await fetch(`${API_URL}/api/proxy/market/crypto?symbols=${encodeURIComponent(symbolsParam)}`)
 
                 if (!response.ok) {
                     console.warn(`Crypto proxy returned ${response.status}`)

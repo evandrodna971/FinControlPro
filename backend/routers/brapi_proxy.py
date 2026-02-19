@@ -8,7 +8,8 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 # Fallback token if env not set
-BRAPI_TOKEN = os.getenv("VITE_BRAPI_TOKEN", "vaojuu2uNboDzmhHXP6Sjg")
+# Fallback token if env not set
+BRAPI_TOKEN = os.getenv("BRAPI_TOKEN", os.getenv("VITE_BRAPI_TOKEN", "vaojuu2uNboDzmhHXP6Sjg"))
 BASE_URL = "https://brapi.dev/api"
 
 # Simple In-Memory Cache
