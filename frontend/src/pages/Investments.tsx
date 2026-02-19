@@ -36,6 +36,7 @@ import { Badge } from '@/components/ui/badge'
 import { marketService } from '@/services/marketService'
 import { AssetHistoryChart } from '@/components/market/AssetHistoryChart'
 import { toast } from 'sonner'
+import { SEO } from '@/components/SEO'
 
 
 interface Asset {
@@ -459,6 +460,7 @@ export default function Investments() {
 
     return (
         <div className="p-6 space-y-6">
+            <SEO title="Investimentos" description="Acompanhe sua carteira de investimentos, cotações em tempo real e watchlist." />
             {/* Header */}
             <motion.div
                 initial={{ opacity: 0, y: -20 }}

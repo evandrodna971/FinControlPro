@@ -13,6 +13,7 @@ import { FinancialHealthIndicator } from '@/components/FinancialHealthIndicator'
 import { SavingsGoalCard } from '@/components/SavingsGoalCard'
 import { JointGoalCard } from '@/components/JointGoalCard'
 import { RecentTransactionsTimeline } from '@/components/RecentTransactionsTimeline'
+import { SEO } from '@/components/SEO'
 import { useMonth } from '@/context/MonthContext'
 
 interface Transaction {
@@ -131,6 +132,7 @@ export default function Dashboard() {
 
     return (
         <div className="p-8 space-y-8">
+            <SEO title="Dashboard" description="Visão geral das suas finanças pessoais - saldo, receitas, despesas e metas." />
             {/* Month/Year Navigation */}
             <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>

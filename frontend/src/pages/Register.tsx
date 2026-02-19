@@ -8,6 +8,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Eye, EyeOff, Check, X } from 'lucide-react'
 import { Spinner } from '@/components/ui/spinner'
+import { SEO } from '@/components/SEO'
 
 export default function Register() {
     const [fullName, setFullName] = useState('')
@@ -88,6 +89,7 @@ export default function Register() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-background p-4">
+            <SEO title="Criar Conta" description="Registre-se no FinControl Pro e comece a controlar suas finanças pessoais." />
             <Card className="w-full max-w-md">
                 <CardHeader>
                     <CardTitle className="text-2xl">Criar conta</CardTitle>

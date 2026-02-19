@@ -9,6 +9,7 @@ import * as Icons from 'lucide-react'
 import { UserBadge } from '@/components/UserBadge'
 import { ImportTransactionsDialog } from '@/components/ImportTransactionsDialog'
 import { Upload } from 'lucide-react'
+import { SEO } from '@/components/SEO'
 
 interface Transaction {
     id: number;
@@ -195,6 +196,7 @@ export default function Transactions() {
 
     return (
         <div className="min-h-screen p-8 bg-background text-foreground">
+            <SEO title="Transações" description="Gerencie todas as suas receitas e despesas em um só lugar." />
             {/* Delete Modal */}
             {deleteModalOpen && transactionToDelete && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">

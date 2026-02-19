@@ -8,6 +8,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Eye, EyeOff, ArrowRight, Check } from 'lucide-react'
 import { Spinner } from '@/components/ui/spinner'
+import { SEO } from '@/components/SEO'
 
 export default function Login() {
     const [email, setEmail] = useState('')
@@ -108,6 +109,7 @@ export default function Login() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-background p-4">
+            <SEO title="Entrar" description="Acesse sua conta no FinControl Pro e gerencie suas finanças." />
             <Card className="w-full max-w-md">
                 <CardHeader>
                     <CardTitle className="text-2xl">Entrar</CardTitle>

@@ -1,0 +1,17 @@
+# FinControl Pro - robots.txt
+User-agent: *
+Allow: /login
+Allow: /register
+Allow: /forgot-password
+Disallow: /dashboard
+Disallow: /transactions
+Disallow: /investments
+Disallow: /categories
+Disallow: /team
+Disallow: /workspace-settings
+Disallow: /market-ranks
+Disallow: /add-transaction
+Disallow: /onboarding
+Disallow: /api/
+
+Sitemap: https://fincontrol-frontend.onrender.com/sitemap.xml
