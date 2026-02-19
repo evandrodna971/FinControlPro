@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, text, inspect
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -33,10 +33,13 @@ def get_db():
 def create_tables():
     Base.metadata.create_all(bind=engine)
     
-from sqlalchemy import inspect
-
     # Auto-migration for new columns
     try:
+        from sqlalchemy import inspect # Import here is fine if indented, but better at top. 
+        # Actually I will keep it inside but indented correctly this time, 
+        # or just use inspect since I will add it to top imports.
+        # Let's clean up the duplicate try/except block that appeared in the view_file output too.
+        
         inspector = inspect(engine)
         columns = [col['name'] for col in inspector.get_columns("categories")]
         
@@ -46,9 +49,6 @@ from sqlalchemy import inspect
                 conn.execute(text("ALTER TABLE categories ADD COLUMN icon VARCHAR"))
                 conn.commit()
             print("Migration successful.")
-                
-    except Exception as e:
-        print(f"Migration check failed: {e}")
                 
     except Exception as e:
         print(f"Migration check failed: {e}")
