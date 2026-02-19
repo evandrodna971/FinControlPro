@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+venv_wsl/
+venv_test/
+.env
+.env.development
+.pytest_cache/
+*.log
+*.db
+
+# Node
+node_modules/
+dist/
+coverage/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+*.exe
+*.zip
+cloudflared.*
+ngrok.*
