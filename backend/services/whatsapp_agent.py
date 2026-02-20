@@ -58,25 +58,31 @@ class WhatsappAgent:
         msg_lower = msg_normalized # Keep original name for compatibility with existing code
 
         # --- TIME & STATUS DETECTION ---
-        # Look for future indicators: "vou", "irei", "agendado", "vencimento", "para", "previsto", etc.
-        future_keywords = r"(?:vou|irei|agendado[oa]?|vencimento|para|pro|previsto[oa]?|a pagar|a receber|boleto|agendar)"
+        # Look for future indicators: verbs in future or intent
+        future_keywords = r"(?:vou|irei|agendar|agendado[oa]?|vencimento|para|pro|previsto[oa]?|a pagar|a receber|boleto)"
         is_future = bool(re.search(future_keywords, msg_lower))
         
-        # Immediate indicators of "paid/received" status: "paguei", "recebi", "gastei", "ja", "concluido", "feito"
-        paid_keywords = r"(?:paguei|recebi|gastei|ja|concluido|feito|pago|recebido|receita|pix|quitado)"
+        # Immediate indicators of "paid/received" status: past verbs or confirmation
+        # Removed "pix" and "receita" because they are neutral (can be used in future or past)
+        paid_keywords = r"(?:paguei|recebi|gastei|ja|concluido|feito|pago|recebido|quitado|liquidado)"
         is_paid_explicit = bool(re.search(paid_keywords, msg_lower))
 
-        # Decision: If explicitly paid, status is paid. If has future keywords and NOT explicitly paid, it's pending.
-        status = "pending" if (is_future and not is_paid_explicit) else "paid"
-
-        # Special case: words like "pendente", "aberto", "devendo" always mean pending
-        if re.search(r"(?:pendente|aberto|devendo|conta)", msg_lower):
+        # Decision: If explicitly future verbs are used, it's pending unless explicitly confirmed as paid
+        if is_future and not is_paid_explicit:
             status = "pending"
+        elif is_paid_explicit:
+            status = "paid"
+        else:
+            # Words like "pendente", "aberto", "devendo" always mean pending regardless of other words
+            if re.search(r"(?:pendente|aberto|devendo|conta)", msg_lower):
+                status = "pending"
+            else:
+                status = "paid" # Default for "50 uber"
 
         # --- DATE EXTRACTION ---
         target_date = datetime.now()
-        # Look for DD/MM or DD/MM/YYYY
-        date_match = re.search(r"(\d{1,2})[/-](\d{1,2})(?:[/-](\d{2,4}))?", msg)
+        # Look for DD/MM or DD/MM/YYYY (handles spaces around the slash/dash)
+        date_match = re.search(r"(\d{1,2})\s*[/-]\s*(\d{1,2})(?:\s*[/-]\s*(\d{2,4}))?", msg)
         if date_match:
             day = int(date_match.group(1))
             month = int(date_match.group(2))
