@@ -1,8 +1,12 @@
 import re
+import logging
 from sqlalchemy.orm import Session
 from datetime import datetime
 from .. import models, crud, schemas_transaction
 from ..smart_categorization import categorizer, normalize as from_smart_categorization_normalize
+
+# Configure logger
+logger = logging.getLogger(__name__)
 
 
 class WhatsappAgent:
@@ -162,6 +166,21 @@ class WhatsappAgent:
         category_id = categorizer.find_category_id(
             self.db, self.user.id, category_name, self.workspace_id
         )
+
+        # If category does not exist, create it auto
+        if not category_id:
+            logger.info(f"Category '{category_name}' not found for user {self.user.id}. Creating it.")
+            new_cat = models.Category(
+                name=category_name,
+                type=tx_type,
+                user_id=self.user.id,
+                workspace_id=self.workspace_id,
+                color="#6366f1" if tx_type == "expense" else "#10b981" # Indigo for expense, Emerald for income
+            )
+            self.db.add(new_cat)
+            self.db.commit()
+            self.db.refresh(new_cat)
+            category_id = new_cat.id
 
         # Create transaction
         now = datetime.now()
