@@ -429,214 +429,173 @@ def create_planned_income(db: Session, income: schemas_gains.PlannedIncomeCreate
     return db_income
 
 def get_dashboard_summary(db: Session, user_id: int, workspace_id: Optional[int] = None, month: Optional[int] = None, year: Optional[int] = None, interval: str = "monthly"):
+    from sqlalchemy import extract, cast, Float, func
+    
     # Use current month/year if not specified
     now = datetime.now()
-    target_month = month if month is not None else now.month
-    target_year = year if year is not None else now.year
+    target_month = int(month) if month is not None else now.month
+    target_year = int(year) if year is not None else now.year
     
-    # Calculate target date based on inputs
-    # We use 00:00:00 as the base for all calculations to avoid filtering by current time
-    try:
-        target_date = datetime(target_year, target_month, 1, 0, 0, 0)
-    except ValueError:
-        target_date = datetime(target_year, target_month, 1, 0, 0, 0)
-
-    # Determine Summary Period Range based on interval
-    # This range applies to "Summary Cards" and "Category Breakdown"
-    if interval == "monthly":
-        period_start = target_date.replace(day=1)
-        period_end = period_start + relativedelta(months=1) - timedelta(days=1)
-    elif interval == "yearly":
-        period_start = target_date.replace(month=1, day=1)
-        period_end = target_date.replace(month=12, day=31)
-    elif interval == "weekly":
-        period_start = target_date - timedelta(days=target_date.weekday())
-        period_end = period_start + timedelta(days=6)
-    elif interval == "biweekly":
-        period_start = target_date - timedelta(days=target_date.weekday())
-        period_end = period_start + timedelta(days=13)
-    else:
-        # Default to monthly
-        period_start = target_date.replace(day=1)
-        period_end = period_start + relativedelta(months=1) - timedelta(days=1)
-
-    print(f"DEBUG Dashboard: User={user_id}, Workspace={workspace_id}, Period={period_start} to {period_end}")
-
-    # 1. Overall Totals for the specified PERIOD
-    # Use < period_end + 1 day to ensure full month coverage on PostgreSQL
-    next_month_start = period_end + timedelta(days=1)
-
-    income_query = db.query(func.sum(models.Transaction.amount)).filter(
-        models.Transaction.type == "income",
-        models.Transaction.status == "paid",
-        models.Transaction.date >= period_start,
-        models.Transaction.date < next_month_start
-    )
-    expense_query = db.query(func.sum(models.Transaction.amount)).filter(
-        models.Transaction.type == "expense",
-        models.Transaction.status == "paid",
-        models.Transaction.date >= period_start,
-        models.Transaction.date < next_month_start
-    )
-
+    # Base workspace/user filter (Must match get_transactions logic)
     if workspace_id:
-        income_query = income_query.filter(models.Transaction.workspace_id == workspace_id)
-        expense_query = expense_query.filter(models.Transaction.workspace_id == workspace_id)
+        workspace_filter = models.Transaction.workspace_id == workspace_id
     else:
-        income_query = income_query.filter(models.Transaction.user_id == user_id)
-        expense_query = expense_query.filter(models.Transaction.user_id == user_id)
+        workspace_filter = models.Transaction.user_id == user_id
 
-    # Explicit cast to float for PostgreSQL compatibility (Decimal -> float)
+    # 1. Main Totals using extract for robustness on PostgreSQL (avoiding date range quirks)
+    income_query = db.query(func.coalesce(func.sum(cast(models.Transaction.amount, Float)), 0.0)).filter(
+        workspace_filter,
+        models.Transaction.type == "income",
+        models.Transaction.status.in_(["paid", "Pago"]),
+        extract('month', models.Transaction.date) == target_month,
+        extract('year', models.Transaction.date) == target_year
+    )
+    
+    expense_query = db.query(func.coalesce(func.sum(cast(models.Transaction.amount, Float)), 0.0)).filter(
+        workspace_filter,
+        models.Transaction.type == "expense",
+        models.Transaction.status.in_(["paid", "Pago"]),
+        extract('month', models.Transaction.date) == target_month,
+        extract('year', models.Transaction.date) == target_year
+    )
+    
     income = float(income_query.scalar() or 0.0)
     expenses = float(expense_query.scalar() or 0.0)
     
-    # 2. Trend Data Calculation (remains trend-focused context)
+    print(f"DEBUG Summary: User={user_id}, Workspace={workspace_id}, Month={target_month}/{target_year}, Income={income}, Expenses={expenses}")
+
+    # Determine Period Range for trends and category breakdown
+    target_date = datetime(target_year, target_month, 1)
+    if interval == "monthly":
+        period_start = target_date.replace(day=1, hour=0, minute=0, second=0)
+        period_end = period_start + relativedelta(months=1) - timedelta(seconds=1)
+    elif interval == "yearly":
+        period_start = target_date.replace(month=1, day=1, hour=0, minute=0, second=0)
+        period_end = target_date.replace(month=12, day=31, hour=23, minute=59, second=59)
+    elif interval == "weekly":
+        period_start = target_date - timedelta(days=target_date.weekday())
+        period_start = period_start.replace(hour=0, minute=0, second=0)
+        period_end = period_start + timedelta(days=6, hours=23, minutes=59, seconds=59)
+    elif interval == "biweekly":
+        period_start = target_date - timedelta(days=target_date.weekday())
+        period_start = period_start.replace(hour=0, minute=0, second=0)
+        period_end = period_start + timedelta(days=13, hours=23, minutes=59, seconds=59)
+    else:
+        period_start = target_date.replace(day=1, hour=0, minute=0, second=0)
+        period_end = period_start + relativedelta(months=1) - timedelta(seconds=1)
+
+    # 2. Trend Data Calculation
     income_trend = []
     expense_trend = []
     
-    # Define range based on interval (centered on target date)
     points_before = 1
     points_after = 2
-    
     ranges = []
     
     if interval == "monthly":
-        # -3 months to +3 months
         for i in range(-points_before, points_after + 1):
             date_point = target_date + relativedelta(months=i)
             ranges.append({
-                "label": date_point.strftime("%b %Y"), # Jan 2024
-                "start": date_point.replace(day=1),
-                "end": date_point.replace(day=1) + relativedelta(months=1) - timedelta(days=1)
+                "label": date_point.strftime("%b %Y"),
+                "start": date_point.replace(day=1, hour=0, minute=0, second=0),
+                "end": date_point.replace(day=1) + relativedelta(months=1) - timedelta(seconds=1)
             })
-            
     elif interval == "yearly":
-        # -2 years to +2 years (5 points total to keep it clean)
         for i in range(-2, 3):
             date_point = target_date + relativedelta(years=i)
             ranges.append({
                 "label": date_point.strftime("%Y"),
-                "start": date_point.replace(month=1, day=1),
-                "end": date_point.replace(month=12, day=31)
+                "start": date_point.replace(month=1, day=1, hour=0, minute=0, second=0),
+                "end": date_point.replace(month=12, day=31, hour=23, minute=59, second=59)
             })
-            
-    elif interval == "weekly":
-        # -3 weeks to +3 weeks
-        start_of_current_week = target_date - timedelta(days=target_date.weekday())
+    elif interval == "weekly" or interval == "biweekly":
+        step = 1 if interval == "weekly" else 2
+        start_of_current = target_date - timedelta(days=target_date.weekday())
         for i in range(-points_before, points_after + 1):
-            week_start = start_of_current_week + timedelta(weeks=i)
-            week_end = week_start + timedelta(days=6)
+            s = start_of_current + timedelta(weeks=i*step)
+            s = s.replace(hour=0, minute=0, second=0)
+            e = s + timedelta(days=(7*step)-1, hours=23, minutes=59, seconds=59)
             ranges.append({
-                "label": f"{week_start.strftime('%d/%m')} - {week_end.strftime('%d/%m')}",
-                "start": week_start,
-                "end": week_end
-            })
-
-    elif interval == "biweekly":
-        # -3 biweeks to +3 biweeks (fortnights)
-        start_of_current_period = target_date - timedelta(days=target_date.weekday())
-        for i in range(-points_before, points_after + 1):
-            period_start_range = start_of_current_period + timedelta(weeks=i*2)
-            period_end_range = period_start_range + timedelta(days=13)
-            ranges.append({
-                "label": f"{period_start_range.strftime('%d/%m')} - {period_end_range.strftime('%d/%m')}",
-                "start": period_start_range,
-                "end": period_end_range
+                "label": f"{s.strftime('%d/%m')} - {e.strftime('%d/%m')}",
+                "start": s,
+                "end": e
             })
     
-    # Query data for each range
     for r in ranges:
-        inc_q = db.query(func.sum(models.Transaction.amount)).filter(
+        inc_v = db.query(func.coalesce(func.sum(cast(models.Transaction.amount, Float)), 0.0)).filter(
+            workspace_filter,
             models.Transaction.type == "income",
-            models.Transaction.status == "paid",
+            models.Transaction.status.in_(["paid", "Pago"]),
             models.Transaction.date >= r["start"],
             models.Transaction.date <= r["end"]
-        )
-        exp_q = db.query(func.sum(models.Transaction.amount)).filter(
+        ).scalar()
+        exp_v = db.query(func.coalesce(func.sum(cast(models.Transaction.amount, Float)), 0.0)).filter(
+            workspace_filter,
             models.Transaction.type == "expense",
-            models.Transaction.status == "paid",
+            models.Transaction.status.in_(["paid", "Pago"]),
             models.Transaction.date >= r["start"],
             models.Transaction.date <= r["end"]
-        )
+        ).scalar()
         
-        if workspace_id:
-            inc_q = inc_q.filter(models.Transaction.workspace_id == workspace_id)
-            exp_q = exp_q.filter(models.Transaction.workspace_id == workspace_id)
-        else:
-            inc_q = inc_q.filter(models.Transaction.user_id == user_id)
-            exp_q = exp_q.filter(models.Transaction.user_id == user_id)
-            
-        income_trend.append({"name": r["label"], "value": inc_q.scalar() or 0.0})
-        expense_trend.append({"name": r["label"], "value": exp_q.scalar() or 0.0})
+        income_trend.append({"name": r["label"], "value": float(inc_v or 0.0)})
+        expense_trend.append({"name": r["label"], "value": float(exp_v or 0.0)})
 
-    
-    # Category breakdown for current PERIOD (expenses only)
+    # 3. Category breakdown
     category_query = db.query(
         models.Category.name,
         models.Category.icon,
         models.Category.budget_limit,
-        func.sum(models.Transaction.amount).label('total')
+        func.coalesce(func.sum(cast(models.Transaction.amount, Float)), 0.0).label('total')
     ).join(
         models.Transaction, models.Transaction.category_id == models.Category.id
     ).filter(
+        workspace_filter,
         models.Transaction.type == "expense",
-        models.Transaction.status == "paid",
+        models.Transaction.status.in_(["paid", "Pago"]),
         models.Transaction.date >= period_start,
         models.Transaction.date <= period_end
-    )
+    ).group_by(models.Category.name, models.Category.icon, models.Category.budget_limit)
     
-    if workspace_id:
-        category_query = category_query.filter(models.Transaction.workspace_id == workspace_id)
-    else:
-        category_query = category_query.filter(models.Transaction.user_id == user_id)
-    
-    category_data = category_query.group_by(models.Category.name, models.Category.icon).all()
-    
+    category_data = category_query.all()
     category_breakdown = []
     total_expenses_for_percentage = float(sum([cat.total for cat in category_data]))
     
     for cat in category_data:
-        percentage = (cat.total / total_expenses_for_percentage * 100) if total_expenses_for_percentage > 0 else 0
+        pct = (cat.total / total_expenses_for_percentage * 100) if total_expenses_for_percentage > 0 else 0
         category_breakdown.append({
             "name": cat.name,
-            "value": cat.total,
-            "percentage": round(percentage, 1),
-            "limit": cat.budget_limit or 0.0,
+            "value": float(cat.total),
+            "percentage": round(pct, 1),
+            "limit": float(cat.budget_limit or 0.0),
             "icon": cat.icon
         })
 
-    # Income Category Breakdown
-    income_category_query = db.query(
+    income_cat_query = db.query(
         models.Category.name,
         models.Category.icon,
         models.Category.budget_limit,
-        func.sum(models.Transaction.amount).label('total')
+        func.coalesce(func.sum(cast(models.Transaction.amount, Float)), 0.0).label('total')
     ).join(
         models.Transaction, models.Transaction.category_id == models.Category.id
     ).filter(
+        workspace_filter,
         models.Transaction.type == "income",
-        models.Transaction.status == "paid",
+        models.Transaction.status.in_(["paid", "Pago"]),
         models.Transaction.date >= period_start,
         models.Transaction.date <= period_end
-    )
+    ).group_by(models.Category.name, models.Category.icon, models.Category.budget_limit)
     
-    if workspace_id:
-        income_category_query = income_category_query.filter(models.Transaction.workspace_id == workspace_id)
-    else:
-        income_category_query = income_category_query.filter(models.Transaction.user_id == user_id)
-        
-    income_category_data = income_category_query.group_by(models.Category.name, models.Category.icon).all()
-    
+    income_cat_data = income_cat_query.all()
     income_category_breakdown = []
-    total_income_for_percentage = float(sum([cat.total for cat in income_category_data]))
+    total_income_for_percentage = float(sum([cat.total for cat in income_cat_data]))
     
-    for cat in income_category_data:
-        percentage = (cat.total / total_income_for_percentage * 100) if total_income_for_percentage > 0 else 0
+    for cat in income_cat_data:
+        pct = (cat.total / total_income_for_percentage * 100) if total_income_for_percentage > 0 else 0
         income_category_breakdown.append({
             "name": cat.name,
-            "value": cat.total,
-            "percentage": round(percentage, 1),
-            "limit": cat.budget_limit or 0.0,
+            "value": float(cat.total),
+            "percentage": round(pct, 1),
+            "limit": float(cat.budget_limit or 0.0),
             "icon": cat.icon
         })
 
