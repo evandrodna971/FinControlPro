@@ -28,7 +28,7 @@ import {
 import {
     MoreHorizontal, Pencil, Plus, History, Trash2, Wallet,
     TrendingUp, TrendingDown, PiggyBank, Search, Filter,
-    ArrowUp, ArrowDown
+    ArrowUp, ArrowDown, Wallet2
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -119,8 +119,11 @@ export default function Investments() {
                 // US stocks -> USD
                 // Crypto -> USD (usually)
                 // B3 -> BRL
+                const ticker = asset.symbol.toUpperCase();
+                const isUSHeuristic = /^[A-Z]{1,5}$/.test(ticker) && !/\d/.test(ticker);
+
                 let sourceCurrency: 'BRL' | 'USD' = 'BRL'
-                if (asset.market === 'US' || asset.asset_type === 'crypto' || asset.market === 'CRYPTO') {
+                if (asset.market === 'US' || isUSHeuristic || asset.asset_type === 'crypto' || asset.market === 'CRYPTO') {
                     sourceCurrency = 'USD'
                 }
 
@@ -151,22 +154,17 @@ export default function Investments() {
                     const assetsWithUpdatedPrices: Array<{ id: number; price: number }> = []
 
                     portfolioAssets = portfolioAssets.map(asset => {
-                        // Case-insensitive match para suportar símbolos como BITCOIN, bitcoin, BTC
                         const quote = portfolioQuotes.find(q =>
                             q.symbol.toUpperCase() === asset.symbol.toUpperCase()
                         )
 
                         let realCurrentPrice: number
                         if (quote?.price && quote.price > 0) {
-                            // Temos cotação em tempo real — usa ela e agenda persistência
                             realCurrentPrice = quote.price
                             assetsWithUpdatedPrices.push({ id: asset.id, price: realCurrentPrice })
                         } else {
-                            // Sem cotação: usa current_price do banco se parecer válido,
-                            // senão usa average_price como fallback seguro
                             const storedPrice = asset.current_price || 0
                             const avgPrice = asset.average_price || 0
-                            // Se current_price for 0 ou for muito menor que average_price (>90% abaixo), usa average_price
                             const isSuspect = storedPrice <= 0 || (avgPrice > 0 && storedPrice < avgPrice * 0.1)
                             realCurrentPrice = isSuspect ? avgPrice : storedPrice
                         }
@@ -174,7 +172,8 @@ export default function Investments() {
                         return {
                             ...asset,
                             current_price: realCurrentPrice,
-                            original_price: realCurrentPrice
+                            original_price: realCurrentPrice,
+                            change_24h: quote?.change || 0
                         }
                     })
 
@@ -197,33 +196,84 @@ export default function Investments() {
 
             setAssets(portfolioAssets)
 
-            // 2. Process Watchlist Assets (Quantity === 0)
-            const watchlistItems = allAssets.filter(a => a.quantity === 0)
+            // 2. Process Watchlist Assets
+            // Inclui TANTO os ativos exclusivos da watchlist (quantity=0)
+            // QUANTO os ativos da carteira (quantity>0) para que apareçam na aba Watchlist com cotação.
+            const watchlistOnlyItems = allAssets.filter(a => a.quantity === 0)
 
-            if (watchlistItems.length > 0) {
-                // Fetch live data for watchlist — passa market para identificar criptos corretamente
-                const quotes = await marketService.getWatchlistQuotes(
-                    watchlistItems.map(w => ({ symbol: w.symbol, type: w.asset_type, market: w.market }))
-                )
-
-                const enrichedWatchlist = watchlistItems.map(item => {
-                    // Case-insensitive para evitar mismatch (ex: BTC vs btc, BITCOIN vs bitcoin)
-                    const quote = quotes.find(q => q.symbol.toUpperCase() === item.symbol.toUpperCase())
+            // Monta lista unificada: carteira + watchlist pura (sem duplicatas por símbolo)
+            const allWatchlistItems = [
+                // Ativos da carteira (já com cotação buscada acima em portfolioAssets)
+                ...portfolioAssets.map(a => {
+                    const cp = Number(a.current_price || 0)
                     return {
-                        id: item.id,
-                        symbol: item.symbol,
-                        name: item.name,
-                        type: item.asset_type,
-                        market: item.market,
+                        id: a.id,
+                        symbol: a.symbol,
+                        name: a.name,
+                        type: a.asset_type,
+                        market: a.market,
+                        value: cp > 0
+                            ? (a.source_currency === 'USD'
+                                ? `$ ${cp.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+                                : `R$ ${cp.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`)
+                            : '-',
+                        change: a.change_24h || 0,
+                        price: cp || Number(a.average_price || 0),
+                        currency: a.source_currency === 'USD' ? 'USD' : 'BRL',
+                        fromPortfolio: true,
+                    }
+                }),
+                // Ativos exclusivos da watchlist (quantity=0)
+                ...watchlistOnlyItems.map(item => ({
+                    id: item.id,
+                    symbol: item.symbol,
+                    name: item.name,
+                    type: item.asset_type,
+                    market: item.market,
+                    value: '-',
+                    change: 0,
+                    price: 0,
+                    currency: undefined,
+                    fromPortfolio: false,
+                }))
+            ]
+
+            // Remover duplicatas pelo símbolo (preferindo o da carteira)
+            const seenSymbols = new Set<string>()
+            const deduped = allWatchlistItems.filter(item => {
+                const key = item.symbol.toUpperCase()
+                if (seenSymbols.has(key)) return false
+                seenSymbols.add(key)
+                return true
+            })
+
+            // Buscar cotações apenas para os que ainda não têm preço (watchlist pura)
+            const needsQuote = deduped.filter(item => !item.fromPortfolio || item.price <= 0)
+            if (needsQuote.length > 0) {
+                const quotes = await marketService.getWatchlistQuotes(
+                    needsQuote.map(w => ({ symbol: w.symbol, type: w.type, market: w.market }))
+                )
+                const enriched = deduped.map(item => {
+                    const quote = quotes.find(q => q.symbol.toUpperCase() === item.symbol.toUpperCase());
+
+                    if (item.fromPortfolio && item.price > 0) {
+                        return {
+                            ...item,
+                            change: quote?.change !== undefined ? quote.change : item.change
+                        };
+                    }
+
+                    return {
+                        ...item,
                         value: quote?.value || '-',
                         change: quote?.change || 0,
                         price: quote?.price || 0,
                         currency: quote?.currency
                     }
                 })
-                setWatchlist(enrichedWatchlist)
+                setWatchlist(enriched)
             } else {
-                setWatchlist([])
+                setWatchlist(deduped)
             }
 
         } catch (error) {
@@ -837,18 +887,23 @@ export default function Investments() {
                                                         <div className={`flex items-center justify-end text-xs font-bold ${item.change >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                                                             {item.change >= 0 ? <ArrowUp className="w-3 h-3 mr-0.5" /> : <ArrowDown className="w-3 h-3 mr-0.5" />}
                                                             {item.change?.toFixed(2)}%
+                                                            <span className={`text-[9px] ml-1 px-1 py-0.5 rounded-sm uppercase tracking-tighter font-black ${item.change >= 0 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>Hoje</span>
                                                         </div>
                                                     </div>
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation() // Prevent selecting when clicking remove
-                                                            removeFromWatchlist(item.symbol)
-                                                        }}
-                                                        className="w-8 h-8 rounded-full flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all"
-                                                        title="Remover da watchlist"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </button>
+                                                    {item.fromPortfolio ? (
+                                                        <Wallet2 className="h-4 w-4 text-blue-500 shrink-0" title="Na sua carteira" />
+                                                    ) : (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                                removeFromWatchlist(item.symbol)
+                                                            }}
+                                                            className="w-8 h-8 rounded-full flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all"
+                                                            title="Remover da watchlist"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))}

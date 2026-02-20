@@ -85,15 +85,37 @@ async def get_quotes(symbols: str = Query(..., description="Comma separated list
             results = []
             for q in quotes:
                 price = q.get("regularMarketPrice", 0)
-                prev_close = q.get("regularMarketPreviousClose", 0)
-                change_pct = 0
-                if prev_close and price:
-                    change_pct = ((price - prev_close) / prev_close) * 100
+                # Fallbacks for price
+                if not price:
+                    price = q.get("currentPrice") or q.get("bid") or 0
+                
+                # Variação percentual direta do Yahoo (vários campos possíveis)
+                change_pct = q.get("regularMarketChangePercent")
+                if change_pct is None:
+                    change_pct = q.get("preMarketChangePercent") or q.get("postMarketChangePercent")
+                
+                # Se não tiver porcentagem direta, tenta calcular usando o fechamento anterior
+                if change_pct is None:
+                    prev_close = (
+                        q.get("regularMarketPreviousClose") or 
+                        q.get("previousClose") or 
+                        0
+                    )
+                    if prev_close and price:
+                        change_pct = ((price - prev_close) / prev_close) * 100
+                    else:
+                        change_pct = 0
+                
+                # Garante que seja float e arredonda para 2 casas
+                try:
+                    change_value = round(float(change_pct), 2)
+                except (ValueError, TypeError):
+                    change_value = 0.0
                 
                 results.append({
                     "symbol": q.get("symbol", ""),
                     "price": price,
-                    "change": change_pct,
+                    "change": change_value,
                     "currency": q.get("currency", "USD"),
                     "market": "US"
                 })

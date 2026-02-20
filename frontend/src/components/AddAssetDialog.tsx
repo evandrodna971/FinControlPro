@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Plus, Trash2, Hash, ChevronRight, ChevronLeft, Check, Target, BarChart3, Wallet, Search } from 'lucide-react'
+import { Plus, Trash2, Hash, ChevronRight, ChevronLeft, Check, Target, Wallet, Search } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -35,8 +35,6 @@ export function AddAssetDialog({ onAssetAdded }: AddAssetDialogProps) {
         name: '',
         asset_type: 'stock',
         market: 'BR',
-        sector: '',
-        dividend_yield: '0',
     })
 
     const [transactions, setTransactions] = useState<TransactionItem[]>([
@@ -89,8 +87,6 @@ export function AddAssetDialog({ onAssetAdded }: AddAssetDialogProps) {
                 name: assetData.name,
                 asset_type: assetData.asset_type,
                 market: assetData.market,
-                sector: assetData.sector || null,
-                dividend_yield: parseFloat(assetData.dividend_yield || '0'),
             })
 
             const assetId = assetResponse.data.id
@@ -114,20 +110,6 @@ export function AddAssetDialog({ onAssetAdded }: AddAssetDialogProps) {
             setOpen(false)
             resetForm()
 
-            // Adiciona à watchlist (quantity=0) para acompanhar cotações
-            try {
-                await api.post('/investments/assets', {
-                    symbol: assetData.symbol,
-                    name: assetData.name,
-                    asset_type: assetData.asset_type,
-                    market: assetData.market,
-                    sector: assetData.sector || null,
-                    dividend_yield: 0,
-                })
-            } catch {
-                // Silencioso — ativo pode já existir na watchlist
-            }
-
             // Refresh após tudo estar persistido
             onAssetAdded()
 
@@ -146,8 +128,6 @@ export function AddAssetDialog({ onAssetAdded }: AddAssetDialogProps) {
             name: '',
             asset_type: 'stock',
             market: 'BR',
-            sector: '',
-            dividend_yield: '0',
         })
         setTransactions([
             { id: Math.random().toString(), date: format(new Date(), 'yyyy-MM-dd'), quantity: '', price: '', broker: '', fees: '0' }
@@ -175,11 +155,11 @@ export function AddAssetDialog({ onAssetAdded }: AddAssetDialogProps) {
                                 Cadastro de Ativo
                             </h2>
                             <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest font-semibold opacity-70">
-                                Etapa {step} de 3
+                                Etapa {step} de 2
                             </p>
                         </div>
                         <div className="flex gap-1.5">
-                            {[1, 2, 3].map((s) => (
+                            {[1, 2].map((s) => (
                                 <div
                                     key={s}
                                     className={`h-1.5 rounded-full transition-all duration-500 ${step >= s ? 'w-8 bg-blue-600' : 'w-2 bg-slate-200 dark:bg-slate-800'}`}
@@ -198,12 +178,6 @@ export function AddAssetDialog({ onAssetAdded }: AddAssetDialogProps) {
                         </div>
                         <div className={`flex flex-col items-center gap-2 transition-all ${step === 2 ? 'scale-110' : 'opacity-40 grayscale'}`}>
                             <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${step >= 2 ? 'bg-blue-50 border-blue-600 text-blue-600' : 'bg-white border-slate-200 text-slate-400'}`}>
-                                <BarChart3 className="h-5 w-5" />
-                            </div>
-                            <span className="text-[10px] font-bold uppercase tracking-tighter">Métricas</span>
-                        </div>
-                        <div className={`flex flex-col items-center gap-2 transition-all ${step === 3 ? 'scale-110' : 'opacity-40 grayscale'}`}>
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${step >= 3 ? 'bg-blue-50 border-blue-600 text-blue-600' : 'bg-white border-slate-200 text-slate-400'}`}>
                                 <Wallet className="h-5 w-5" />
                             </div>
                             <span className="text-[10px] font-bold uppercase tracking-tighter">Ordens</span>
@@ -348,55 +322,6 @@ export function AddAssetDialog({ onAssetAdded }: AddAssetDialogProps) {
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
-                                className="w-full space-y-12"
-                            >
-                                <div className="text-center space-y-1 mb-4">
-                                    <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200 px-3 py-1 mb-1 text-[10px]">Dados Técnicos</Badge>
-                                    <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Onde ele se encaixa?</h3>
-                                    <p className="text-slate-500 text-xs">Estas informações ajudam a classificar sua carteira.</p>
-                                </div>
-
-                                <div className="space-y-8 max-w-sm mx-auto">
-                                    <div className="space-y-1.5 text-left">
-                                        <div className="flex items-center justify-between ml-1">
-                                            <Label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Setor / Segmento</Label>
-                                            <span className="text-[10px] text-slate-400 italic">Ex: Tecnologia, Financeiro, Saúde</span>
-                                        </div>
-                                        <Input
-                                            placeholder="Qual o setor deste ativo?"
-                                            value={assetData.sector}
-                                            onChange={(e) => setAssetData({ ...assetData, sector: e.target.value })}
-                                            className="h-12 text-sm font-bold border-none bg-white dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-slate-800 shadow-xl shadow-blue-500/5 focus:ring-2 focus:ring-blue-500 placeholder:font-normal placeholder:text-slate-400 px-4"
-                                        />
-                                    </div>
-
-                                    <div className="space-y-1.5 text-left">
-                                        <div className="flex items-center justify-between ml-1">
-                                            <Label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Dividend Yield Esperado (%)</Label>
-                                            <span className="text-[10px] text-slate-400 italic">Retorno anual projetado</span>
-                                        </div>
-                                        <div className="relative">
-                                            <Input
-                                                type="number"
-                                                step="0.01"
-                                                placeholder="0.00"
-                                                value={assetData.dividend_yield}
-                                                onChange={(e) => setAssetData({ ...assetData, dividend_yield: e.target.value })}
-                                                className="h-12 font-black border-none bg-white dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-slate-800 shadow-xl shadow-blue-500/5 focus:ring-2 focus:ring-blue-500 text-lg pr-12 placeholder:font-normal placeholder:text-slate-400 px-4"
-                                            />
-                                            <span className="absolute right-6 top-1/2 -translate-y-1/2 font-black text-blue-600">%</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        )}
-
-                        {step === 3 && (
-                            <motion.div
-                                key="step3"
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
                                 className="w-full mt-[-20px]"
                             >
                                 <div className="flex items-center justify-between mb-6">
@@ -501,7 +426,7 @@ export function AddAssetDialog({ onAssetAdded }: AddAssetDialogProps) {
                         )}
                     </div>
 
-                    {step < 3 ? (
+                    {step < 2 ? (
                         <Button
                             onClick={nextStep}
                             className="bg-slate-900 hover:bg-black text-white rounded-full px-8 font-bold shadow-xl shadow-black/10 flex items-center group"

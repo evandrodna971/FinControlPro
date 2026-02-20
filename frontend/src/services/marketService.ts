@@ -434,22 +434,24 @@ export const marketService = {
     },
 
     async getWatchlistQuotes(assets: { symbol: string, type?: string, market?: string }[]): Promise<RankItem[]> {
-        const brStocks = assets.filter(a => (!a.market || a.market === 'BR') && (!a.type || a.type !== 'crypto')).map(a => a.symbol)
-        const usStocks = assets.filter(a => a.market === 'US').map(a => a.symbol)
-        const cryptos = assets.filter(a => a.type === 'crypto' || a.market === 'CRYPTO').map(a => a.symbol.toLowerCase())
+        const stocks = assets.filter(a => {
+            const m = a.market?.toUpperCase();
+            const t = a.type?.toLowerCase();
+            return m !== 'CRYPTO' && t !== 'crypto' && !/^(BTC|ETH|SOL|XRP|BNB|DOGE|ADA|AVAX)$/i.test(a.symbol);
+        }).map(a => a.symbol)
 
-        let brData: RankItem[] = []
-        let usData: RankItem[] = []
+        const cryptos = assets.filter(a => {
+            const m = a.market?.toUpperCase();
+            const t = a.type?.toLowerCase();
+            return m === 'CRYPTO' || t === 'crypto' || /^(BTC|ETH|SOL|XRP|BNB|DOGE|ADA|AVAX)$/i.test(a.symbol);
+        }).map(a => a.symbol.toLowerCase())
+
+        let stocksData: RankItem[] = []
         let cryptoData: RankItem[] = []
 
-        // Fetch BR Stocks
-        if (brStocks.length > 0) {
-            brData = await this.getQuotes(brStocks)
-        }
-
-        // Fetch US Stocks
-        if (usStocks.length > 0) {
-            usData = await this.getMarketQuotes(usStocks)
+        // Fetch all non-crypto assets (BR & US) via Brapi
+        if (stocks.length > 0) {
+            stocksData = await this.getQuotes(stocks)
         }
 
         // Fetch Cryptos
@@ -486,6 +488,6 @@ export const marketService = {
             }
         }
 
-        return [...brData, ...usData, ...cryptoData]
+        return [...stocksData, ...cryptoData]
     }
 }
