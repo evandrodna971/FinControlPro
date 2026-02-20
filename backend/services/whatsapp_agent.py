@@ -120,50 +120,52 @@ class WhatsappAgent:
         if msg_lower in ("desfazer", "cancelar", "cancelar ultimo", "cancelar última", "anular"):
             return self._undo_last_transaction()
 
-        # --- TRANSACTION PARSING ---
+        # Verbs that can prefix a transaction command (optional)
+        verb_prefixes = r"(?:vou|irei|quero|queria|planejo|agendar|agendado[oa]?|preciso|devo|tenho que)?\s*"
 
         # Patterns for expenses
-        # "gastei 50 no uber", "paguei 120,50 na luz", "comprei 30 farmacia"
-        expense_keywords = r"(?:gastei|paguei|comprei|compra|pago|gastos|despesa)"
+        # "gastei 50 no uber", "vou pagar 120 luz", "pagar 30 farmacia"
+        expense_keywords = r"(?:gastei|paguei|pagar|comprei|compra|pago|gastos|despesa|debito|debitei)"
         expense_match = re.match(
-            rf"^{expense_keywords}\s+R?\$?\s*(\d+(?:[.,]\d{{1,2}})?)\s*(?:no|na|em|com|de|do|da|pra|pro|para|at[eé]|no\(a\))?\s*(.*)",
+            rf"^{verb_prefixes}({expense_keywords})\s+R?\$?\s*(\d+(?:[.,]\d{{1,2}})?)\s*(?:no|na|em|com|de|do|da|pra|pro|para|at[eé]|no\(a\))?\s*(.*)",
             msg_lower
         )
 
         if expense_match:
             return self._create_transaction(
-                amount_str=expense_match.group(1),
-                description=expense_match.group(2),
+                amount_str=expense_match.group(2),
+                description=expense_match.group(3),
                 tx_type="expense",
                 status=status,
                 custom_date=target_date
             )
 
         # Patterns for income
-        # "recebi 3000 salario", "ganhei 150 de freelance"
-        income_keywords = r"(?:recebi|ganhei|entrada|entrou|ganho|receita|pix)"
+        # "recebi 3000 salario", "vou receber 150 freelance"
+        income_keywords = r"(?:recebi|receber|ganhei|ganhar|entrada|entrou|ganho|receita|pix|credito|creditei)"
         income_match = re.match(
-            rf"^{income_keywords}\s+R?\$?\s*(\d+(?:[.,]\d{{1,2}})?)\s*(?:de|do|da|via|por|no|na)?\s*(.*)",
+            rf"^{verb_prefixes}({income_keywords})\s+R?\$?\s*(\d+(?:[.,]\d{{1,2}})?)\s*(?:de|do|da|via|por|no|na)?\s*(.*)",
             msg_lower
         )
 
         if income_match:
             return self._create_transaction(
-                amount_str=income_match.group(1),
-                description=income_match.group(2),
+                amount_str=income_match.group(2),
+                description=income_match.group(3),
                 tx_type="income",
                 status=status,
                 custom_date=target_date
             )
 
         # Fallback pattern: just a number + description (treated as expense)
-        # "50 uber", "120,90 mercado", "R$ 45 almoço"
+        # "50 uber", "vou pagar 120,90 mercado", "R$ 45 almoço"
         simple_match = re.match(
-            r"^R?\$?\s*(\d+(?:[.,]\d{1,2})?)\s+(.+)",
+            rf"^{verb_prefixes}R?\$?\s*(\d+(?:[.,]\d{{1,2}})?)\s+(.+)",
             msg_lower
         )
 
         if simple_match:
+            # If it captures a future verb but no explicit income/expense keyword, we treat as expense
             return self._create_transaction(
                 amount_str=simple_match.group(1),
                 description=simple_match.group(2),
@@ -186,7 +188,7 @@ class WhatsappAgent:
     # TRANSACTION CREATION
     # ─────────────────────────────────────────────
 
-    def _create_transaction(self, amount_str: str, description: str, tx_type: str, status: str = "paid", custom_date: datetime = None) -> str:
+    def _create_transaction(self, amount_str: str, description: str, tx_type: str, status: str = "paid", custom_date=None) -> str:
         """Create a transaction from parsed message data."""
         # Parse amount
         amount_str = amount_str.replace(",", ".")
@@ -202,6 +204,9 @@ class WhatsappAgent:
         
         # Remove "reais" or "real" if it's the first word after the amount
         description = re.sub(r"^(?:reais|real)\s*", "", description, flags=re.IGNORECASE).strip()
+        
+        # Remove date mention if it's trailing like "dia 22/03", "para 25/02", "p/ 30/01"
+        description = re.sub(r"\s+(?:dia|para|pro|p/|em)\s+\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?$", "", description, flags=re.IGNORECASE).strip()
 
         if not description:
             description = "Despesa via WhatsApp" if tx_type == "expense" else "Receita via WhatsApp"
