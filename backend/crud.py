@@ -435,13 +435,13 @@ def get_dashboard_summary(db: Session, user_id: int, workspace_id: Optional[int]
     target_year = year if year is not None else now.year
     
     # Calculate target date based on inputs
+    # We use 00:00:00 as the base for all calculations to avoid filtering by current time
     try:
-        target_date = datetime(target_year, target_month, 1)
-        if target_month == now.month and target_year == now.year:
-            target_date = now
+        target_date = datetime(target_year, target_month, 1, 0, 0, 0)
     except ValueError:
-        target_date = datetime(target_year, target_month, 1)
+        target_date = datetime(target_year, target_month, 1, 0, 0, 0)
 
+    print(f"DEBUG Dashboard: User={user_id}, Workspace={workspace_id}, Period={period_start} to {period_end}")
     # Determine Summary Period Range based on interval
     # This range applies to "Summary Cards" and "Category Breakdown"
     if interval == "monthly":
@@ -462,28 +462,32 @@ def get_dashboard_summary(db: Session, user_id: int, workspace_id: Optional[int]
         period_end = period_start + relativedelta(months=1) - timedelta(days=1)
 
     # 1. Overall Totals for the specified PERIOD
+    # Use < period_end + 1 day to ensure full month coverage on PostgreSQL
+    next_month_start = period_end + timedelta(days=1)
+
     income_query = db.query(func.sum(models.Transaction.amount)).filter(
         models.Transaction.type == "income",
         models.Transaction.status == "paid",
         models.Transaction.date >= period_start,
-        models.Transaction.date <= period_end
+        models.Transaction.date < next_month_start
     )
     expense_query = db.query(func.sum(models.Transaction.amount)).filter(
         models.Transaction.type == "expense",
         models.Transaction.status == "paid",
         models.Transaction.date >= period_start,
-        models.Transaction.date <= period_end
+        models.Transaction.date < next_month_start
     )
-    
+
     if workspace_id:
         income_query = income_query.filter(models.Transaction.workspace_id == workspace_id)
         expense_query = expense_query.filter(models.Transaction.workspace_id == workspace_id)
     else:
         income_query = income_query.filter(models.Transaction.user_id == user_id)
         expense_query = expense_query.filter(models.Transaction.user_id == user_id)
-        
-    income = income_query.scalar() or 0.0
-    expenses = expense_query.scalar() or 0.0
+
+    # Explicit cast to float for PostgreSQL compatibility (Decimal -> float)
+    income = float(income_query.scalar() or 0.0)
+    expenses = float(expense_query.scalar() or 0.0)
     
     # 2. Trend Data Calculation (remains trend-focused context)
     income_trend = []
@@ -588,7 +592,7 @@ def get_dashboard_summary(db: Session, user_id: int, workspace_id: Optional[int]
     category_data = category_query.group_by(models.Category.name, models.Category.icon).all()
     
     category_breakdown = []
-    total_expenses_for_percentage = sum([cat.total for cat in category_data])
+    total_expenses_for_percentage = float(sum([cat.total for cat in category_data]))
     
     for cat in category_data:
         percentage = (cat.total / total_expenses_for_percentage * 100) if total_expenses_for_percentage > 0 else 0
@@ -623,7 +627,7 @@ def get_dashboard_summary(db: Session, user_id: int, workspace_id: Optional[int]
     income_category_data = income_category_query.group_by(models.Category.name, models.Category.icon).all()
     
     income_category_breakdown = []
-    total_income_for_percentage = sum([cat.total for cat in income_category_data])
+    total_income_for_percentage = float(sum([cat.total for cat in income_category_data]))
     
     for cat in income_category_data:
         percentage = (cat.total / total_income_for_percentage * 100) if total_income_for_percentage > 0 else 0
