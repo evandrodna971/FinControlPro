@@ -52,9 +52,9 @@ async def whatsapp_webhook(
     # 2. If not found, check for LINKING command
     if not user:
         # Check if message is a linking command: "VINCULAR <EMAIL>"
-        # Regex to capture email
-        listing_pattern = r"^VINCULAR\s+([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$"
-        match = re.search(listing_pattern, message_body, re.IGNORECASE)
+        # Regex to capture email, handles 'vincular' with or without accent
+        listing_pattern = r"^[Vv][ÍíIi][Nn][Cc][Uu][Ll][Aa][Rr]\s+([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$"
+        match = re.search(listing_pattern, message_body)
         
         if match:
             email = match.group(1)

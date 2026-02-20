@@ -2,7 +2,7 @@ import re
 from sqlalchemy.orm import Session
 from datetime import datetime
 from .. import models, crud, schemas_transaction
-from ..smart_categorization import categorizer
+from ..smart_categorization import categorizer, normalize as from_smart_categorization_normalize
 
 
 class WhatsappAgent:
@@ -48,7 +48,9 @@ class WhatsappAgent:
     def process_message(self, message: str) -> str:
         """Main entry point for processing a WhatsApp message."""
         msg = message.strip()
-        msg_lower = msg.lower().strip()
+        # Normalize: lowercase and remove accents for command matching
+        msg_normalized = from_smart_categorization_normalize(msg)
+        msg_lower = msg_normalized # Keep original name for compatibility with existing code
 
         # --- COMMAND ROUTING ---
 
