@@ -1,5 +1,6 @@
 import re
 import logging
+import random
 from sqlalchemy.orm import Session
 from datetime import datetime
 from .. import models, crud, schemas_transaction
@@ -56,6 +57,43 @@ class WhatsappAgent:
         msg_normalized = from_smart_categorization_normalize(msg)
         msg_lower = msg_normalized # Keep original name for compatibility with existing code
 
+        # --- TIME & STATUS DETECTION ---
+        # Look for future indicators: "vou", "irei", "agendado", "vencimento", "para", "previsto", etc.
+        future_keywords = r"(?:vou|irei|agendado[oa]?|vencimento|para|pro|previsto[oa]?|a pagar|a receber|boleto|agendar)"
+        is_future = bool(re.search(future_keywords, msg_lower))
+        
+        # Immediate indicators of "paid/received" status: "paguei", "recebi", "gastei", "ja", "concluido", "feito"
+        paid_keywords = r"(?:paguei|recebi|gastei|ja|concluido|feito|pago|recebido|receita|pix|quitado)"
+        is_paid_explicit = bool(re.search(paid_keywords, msg_lower))
+
+        # Decision: If explicitly paid, status is paid. If has future keywords and NOT explicitly paid, it's pending.
+        status = "pending" if (is_future and not is_paid_explicit) else "paid"
+
+        # Special case: words like "pendente", "aberto", "devendo" always mean pending
+        if re.search(r"(?:pendente|aberto|devendo|conta)", msg_lower):
+            status = "pending"
+
+        # --- DATE EXTRACTION ---
+        target_date = datetime.now()
+        # Look for DD/MM or DD/MM/YYYY
+        date_match = re.search(r"(\d{1,2})[/-](\d{1,2})(?:[/-](\d{2,4}))?", msg)
+        if date_match:
+            day = int(date_match.group(1))
+            month = int(date_match.group(2))
+            year = int(date_match.group(3)) if date_match.group(3) else target_date.year
+            # Basic validation
+            try:
+                if year < 100: year += 2000 # Handle 2-digit year
+                target_date = target_date.replace(day=day, month=month, year=year)
+            except ValueError:
+                pass # Invalid date, keep current
+        elif "amanha" in msg_normalized:
+            from datetime import timedelta
+            target_date += timedelta(days=1)
+        elif "ontem" in msg_normalized:
+            from datetime import timedelta
+            target_date -= timedelta(days=1)
+
         # --- COMMAND ROUTING ---
 
         # Help / Greeting
@@ -96,7 +134,9 @@ class WhatsappAgent:
             return self._create_transaction(
                 amount_str=expense_match.group(1),
                 description=expense_match.group(2),
-                tx_type="expense"
+                tx_type="expense",
+                status=status,
+                custom_date=target_date
             )
 
         # Patterns for income
@@ -111,7 +151,9 @@ class WhatsappAgent:
             return self._create_transaction(
                 amount_str=income_match.group(1),
                 description=income_match.group(2),
-                tx_type="income"
+                tx_type="income",
+                status=status,
+                custom_date=target_date
             )
 
         # Fallback pattern: just a number + description (treated as expense)
@@ -125,7 +167,9 @@ class WhatsappAgent:
             return self._create_transaction(
                 amount_str=simple_match.group(1),
                 description=simple_match.group(2),
-                tx_type="expense"
+                tx_type="expense",
+                status=status,
+                custom_date=target_date
             )
 
         # Nothing matched
@@ -142,7 +186,7 @@ class WhatsappAgent:
     # TRANSACTION CREATION
     # ─────────────────────────────────────────────
 
-    def _create_transaction(self, amount_str: str, description: str, tx_type: str) -> str:
+    def _create_transaction(self, amount_str: str, description: str, tx_type: str, status: str = "paid", custom_date: datetime = None) -> str:
         """Create a transaction from parsed message data."""
         # Parse amount
         amount_str = amount_str.replace(",", ".")
@@ -155,6 +199,10 @@ class WhatsappAgent:
 
         # Clean description
         description = description.strip()
+        
+        # Remove "reais" or "real" if it's the first word after the amount
+        description = re.sub(r"^(?:reais|real)\s*", "", description, flags=re.IGNORECASE).strip()
+
         if not description:
             description = "Despesa via WhatsApp" if tx_type == "expense" else "Receita via WhatsApp"
         else:
@@ -170,12 +218,22 @@ class WhatsappAgent:
         # If category does not exist, create it auto
         if not category_id:
             logger.info(f"Category '{category_name}' not found for user {self.user.id}. Creating it.")
+            
+            # Get default icon from rules
+            cat_data = categorizer.rules.get(category_name, {})
+            icon = cat_data.get("icon", "MoreHorizontal")
+            
+            # Random color generator
+            colors = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899", "#06b6d4"]
+            rand_color = random.choice(colors)
+
             new_cat = models.Category(
                 name=category_name,
                 type=tx_type,
                 user_id=self.user.id,
                 workspace_id=self.workspace_id,
-                color="#6366f1" if tx_type == "expense" else "#10b981" # Indigo for expense, Emerald for income
+                color=rand_color,
+                icon=icon
             )
             self.db.add(new_cat)
             self.db.commit()
@@ -184,15 +242,17 @@ class WhatsappAgent:
 
         # Create transaction
         now = datetime.now()
+        tx_date = custom_date if custom_date else now
+        
         transaction_data = schemas_transaction.TransactionCreate(
             amount=amount,
             description=description,
-            date=now,
+            date=tx_date,
             type=tx_type,
             category_id=category_id,
             payment_method="Outros",
-            status="paid",
-            paid_at=now
+            status=status,
+            paid_at=tx_date if status == "paid" else None
         )
 
         crud.create_user_transaction(
@@ -273,7 +333,7 @@ class WhatsappAgent:
         else:
             query = query.filter(models.Transaction.user_id == self.user.id)
 
-        transactions = query.order_by(models.Transaction.date.desc()).limit(5).all()
+        transactions = query.order_by(models.Transaction.created_at.desc()).limit(5).all()
 
         if not transactions:
             return "📭 Nenhuma transação encontrada ainda."

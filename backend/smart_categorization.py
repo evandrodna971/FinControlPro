@@ -13,93 +13,141 @@ class SmartCategorizer:
         # Keywords in Portuguese mapped to common category names
         self.rules = {
             # --- DESPESAS ---
-            "Alimentação": [
-                "almoco", "almoço", "janta", "jantar", "cafe", "café",
-                "lanche", "restaurante", "padaria", "pizza", "hamburguer",
-                "hamburger", "sushi", "acai", "açaí", "marmita", "marmitex",
-                "ifood", "uber eats", "rappi", "comida", "refeicao",
-                "refeição", "coxinha", "pastel", "salgado", "sorvete",
-                "doceria", "confeitaria", "churrascaria", "rodizio",
-                "buffet", "bar", "boteco", "cerveja", "bebida",
-            ],
-            "Transporte": [
-                "uber", "99", "taxi", "táxi", "gasolina", "combustivel",
-                "combustível", "estacionamento", "pedagio", "pedágio",
-                "metro", "metrô", "onibus", "ônibus", "passagem",
-                "trem", "brt", "moto", "carro", "oficina", "mecanico",
-                "mecânico", "pneu", "oleo", "óleo", "lavagem", "ipva",
-                "multa", "seguro auto", "seguro carro",
-            ],
-            "Moradia": [
-                "aluguel", "condominio", "condomínio", "iptu", "luz",
-                "energia", "agua", "água", "gas", "gás", "internet",
-                "wifi", "celular", "telefone", "conta de luz",
-                "conta de agua", "conta de água", "fatura",
-            ],
-            "Saúde": [
-                "farmacia", "farmácia", "remedio", "remédio", "medico",
-                "médico", "consulta", "exame", "hospital", "dentista",
-                "psicólogo", "psicologo", "terapia", "academia",
-                "plano de saude", "plano de saúde", "unimed",
-                "droga", "drogaria", "suplemento", "vitamina",
-            ],
-            "Educação": [
-                "escola", "faculdade", "curso", "livro", "udemy",
-                "alura", "mensalidade", "material escolar", "apostila",
-                "cursinho", "universidade", "aula",
-            ],
-            "Lazer": [
-                "netflix", "spotify", "cinema", "filme", "jogo", "game",
-                "show", "teatro", "parque", "viagem", "hotel", "airbnb",
-                "passeio", "diversao", "diversão", "festa", "balada",
-                "disney", "prime", "hbo", "globoplay", "youtube premium",
-                "xbox", "playstation", "steam", "twitch",
-            ],
-            "Compras": [
-                "roupa", "sapato", "tenis", "tênis", "camisa", "calça",
-                "calcado", "calçado", "shopping", "loja", "amazon",
-                "mercado livre", "shopee", "shein", "magalu",
-                "americanas", "casas bahia", "renner", "riachuelo",
-                "presente", "eletrônico", "eletronico", "celular",
-            ],
-            "Mercado": [
-                "mercado", "supermercado", "feira", "hortifruti",
-                "atacado", "atacadao", "atacadão", "assai", "assaí",
-                "carrefour", "pão de acucar", "guanabara", "extra",
-                "compras do mes", "compras do mês", "rancho",
-            ],
-            "Pet": [
-                "pet", "ração", "racao", "veterinario", "veterinário",
-                "petshop", "pet shop", "banho e tosa", "vacina pet",
-            ],
-            "Assinatura": [
-                "assinatura", "mensalidade", "plano mensal",
-                "icloud", "google one", "chatgpt", "notion",
-            ],
-            "Outros": [
-                "despesa", "gasto", "pagamento",
-            ],
+            "Alimentação": {
+                "icon": "Utensils",
+                "keywords": [
+                    "almoco", "almoço", "janta", "jantar", "cafe", "café",
+                    "lanche", "restaurante", "padaria", "pizza", "hamburguer",
+                    "hamburger", "sushi", "acai", "açaí", "marmita", "marmitex",
+                    "ifood", "uber eats", "rappi", "comida", "refeicao",
+                    "refeição", "coxinha", "pastel", "salgado", "sorvete",
+                    "doceria", "confeitaria", "churrascaria", "rodizio",
+                    "buffet", "bar", "boteco", "cerveja", "bebida",
+                ]
+            },
+            "Transporte": {
+                "icon": "Car",
+                "keywords": [
+                    "uber", "99", "taxi", "táxi", "gasolina", "combustivel",
+                    "combustível", "estacionamento", "pedagio", "pedágio",
+                    "metro", "metrô", "onibus", "ônibus", "passagem",
+                    "trem", "brt", "moto", "carro", "oficina", "mecanico",
+                    "mecânico", "pneu", "oleo", "óleo", "lavagem", "ipva",
+                    "multa", "seguro auto", "seguro carro",
+                ]
+            },
+            "Moradia": {
+                "icon": "Home",
+                "keywords": [
+                    "aluguel", "condominio", "condomínio", "iptu", "luz",
+                    "energia", "agua", "água", "gas", "gás", "internet",
+                    "wifi", "celular", "telefone", "conta de luz",
+                    "conta de agua", "conta de água", "fatura",
+                ]
+            },
+            "Saúde": {
+                "icon": "Stethoscope",
+                "keywords": [
+                    "farmacia", "farmácia", "remedio", "remédio", "medico",
+                    "médico", "consulta", "exame", "hospital", "dentista",
+                    "psicólogo", "psicologo", "terapia", "academia",
+                    "plano de saude", "plano de saúde", "unimed",
+                    "droga", "drogaria", "suplemento", "vitamina",
+                ]
+            },
+            "Educação": {
+                "icon": "GraduationCap",
+                "keywords": [
+                    "escola", "faculdade", "curso", "livro", "udemy",
+                    "alura", "mensalidade", "material escolar", "apostila",
+                    "cursinho", "universidade", "aula",
+                ]
+            },
+            "Lazer": {
+                "icon": "PartyPopper",
+                "keywords": [
+                    "netflix", "spotify", "cinema", "filme", "jogo", "game",
+                    "show", "teatro", "parque", "viagem", "hotel", "airbnb",
+                    "passeio", "diversao", "diversão", "festa", "balada",
+                    "disney", "prime", "hbo", "globoplay", "youtube premium",
+                    "xbox", "playstation", "steam", "twitch",
+                ]
+            },
+            "Compras": {
+                "icon": "ShoppingBag",
+                "keywords": [
+                    "roupa", "sapato", "tenis", "tênis", "camisa", "calça",
+                    "calcado", "calçado", "shopping", "loja", "amazon",
+                    "mercado livre", "shopee", "shein", "magalu",
+                    "americanas", "casas bahia", "renner", "riachuelo",
+                    "presente", "eletrônico", "eletronico", "celular",
+                ]
+            },
+            "Mercado": {
+                "icon": "ShoppingCart",
+                "keywords": [
+                    "mercado", "supermercado", "feira", "hortifruti",
+                    "atacado", "atacadao", "atacadão", "assai", "assaí",
+                    "carrefour", "pão de acucar", "guanabara", "extra",
+                    "compras do mes", "compras do mês", "rancho",
+                ]
+            },
+            "Pet": {
+                "icon": "Dog",
+                "keywords": [
+                    "pet", "ração", "racao", "veterinario", "veterinário",
+                    "petshop", "pet shop", "banho e tosa", "vacina pet",
+                ]
+            },
+            "Assinatura": {
+                "icon": "CreditCard",
+                "keywords": [
+                    "assinatura", "mensalidade", "plano mensal",
+                    "icloud", "google one", "chatgpt", "notion",
+                ]
+            },
+            "Outros": {
+                "icon": "MoreHorizontal",
+                "keywords": [
+                    "despesa", "gasto", "pagamento",
+                ]
+            },
 
             # --- RECEITAS ---
-            "Salário": [
-                "salario", "salário", "pagamento", "holerite",
-                "contracheque", "folha", "adiantamento",
-            ],
-            "Freelance": [
-                "freelance", "freela", "serviço", "servico",
-                "bico", "consultoria", "projeto",
-            ],
-            "Investimentos": [
-                "dividendo", "rendimento", "juros", "yield",
-                "proventos", "resgate", "aplicacao", "aplicação",
-            ],
-            "Pix": [
-                "pix", "transferencia", "transferência",
-                "ted", "doc",
-            ],
-            "Vendas": [
-                "venda", "vendido", "vendi",
-            ],
+            "Salário": {
+                "icon": "Wallet",
+                "keywords": [
+                    "salario", "salário", "pagamento", "holerite",
+                    "contracheque", "folha", "adiantamento",
+                ]
+            },
+            "Freelance": {
+                "icon": "Briefcase",
+                "keywords": [
+                    "freelance", "freela", "serviço", "servico",
+                    "bico", "consultoria", "projeto",
+                ]
+            },
+            "Investimentos": {
+                "icon": "TrendingUp",
+                "keywords": [
+                    "dividendo", "rendimento", "juros", "yield",
+                    "proventos", "resgate", "aplicacao", "aplicação",
+                ]
+            },
+            "Pix": {
+                "icon": "ArrowRightLeft",
+                "keywords": [
+                    "pix", "transferencia", "transferência",
+                    "ted", "doc",
+                ]
+            },
+            "Vendas": {
+                "icon": "Tag",
+                "keywords": [
+                    "venda", "vendido", "vendi",
+                ]
+            },
         }
 
     def predict(self, description: str, transaction_type: str = "expense") -> str:
@@ -112,10 +160,10 @@ class SmartCategorizer:
 
         relevant = income_categories if transaction_type == "income" else expense_categories
 
-        for category, keywords in self.rules.items():
+        for category, data in self.rules.items():
             if category not in relevant:
                 continue
-            for keyword in keywords:
+            for keyword in data["keywords"]:
                 if normalize(keyword) in desc_normalized:
                     return category
 
