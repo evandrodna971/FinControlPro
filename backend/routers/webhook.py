@@ -20,6 +20,14 @@ async def whatsapp_status():
     """Endpoint simplificado para verificar se o webhook está online."""
     return {"status": "online", "message": "FinControl Pro WhatsApp Webhook is active"}
 
+@router.get("/whatsapp")
+async def whatsapp_get_info():
+    """Retorna uma instrução amigável se acessado via GET (navegador)."""
+    return {
+        "message": "Este endpoint espera uma requisição POST do Twilio.",
+        "test_url": "/webhook/whatsapp/status"
+    }
+
 @router.post("/whatsapp")
 async def whatsapp_webhook(
     request: Request,
