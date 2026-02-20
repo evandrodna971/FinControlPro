@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Form, Depends, HTTPException
+from fastapi import APIRouter, Form, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from .. import database, models
 from ..services.whatsapp_agent import WhatsappAgent
@@ -14,12 +14,24 @@ router = APIRouter(
     tags=["Webhook"]
 )
 
+
+@router.get("/whatsapp/status")
+async def whatsapp_status():
+    """Endpoint simplificado para verificar se o webhook está online."""
+    return {"status": "online", "message": "FinControl Pro WhatsApp Webhook is active"}
+
 @router.post("/whatsapp")
 async def whatsapp_webhook(
+    request: Request,
     From: str = Form(...),
     Body: str = Form(...),
     db: Session = Depends(database.get_db)
 ):
+    # Log raw info for debugging
+    headers = dict(request.headers)
+    logger.info(f"--- WhatsApp Webhook Received ---")
+    logger.info(f"Headers: {headers}")
+    
     # Clean phone number (remove 'whatsapp:' prefix)
     phone_number = From.replace("whatsapp:", "").strip()
     message_body = Body.strip()

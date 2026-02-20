@@ -80,9 +80,9 @@ class WhatsappAgent:
 
         # Patterns for expenses
         # "gastei 50 no uber", "paguei 120,50 na luz", "comprei 30 farmacia"
-        expense_keywords = r"(?:gastei|paguei|comprei|compra|pago)"
+        expense_keywords = r"(?:gastei|paguei|comprei|compra|pago|gastos|despesa)"
         expense_match = re.match(
-            rf"^{expense_keywords}\s+R?\$?\s*(\d+(?:[.,]\d{{1,2}})?)\s*(?:no|na|em|com|de|do|da|pra|pro|para)?\s*(.*)",
+            rf"^{expense_keywords}\s+R?\$?\s*(\d+(?:[.,]\d{{1,2}})?)\s*(?:no|na|em|com|de|do|da|pra|pro|para|at[eé]|no\(a\))?\s*(.*)",
             msg_lower
         )
 
@@ -95,9 +95,9 @@ class WhatsappAgent:
 
         # Patterns for income
         # "recebi 3000 salario", "ganhei 150 de freelance"
-        income_keywords = r"(?:recebi|ganhei|entrada|entrou)"
+        income_keywords = r"(?:recebi|ganhei|entrada|entrou|ganho|receita|pix)"
         income_match = re.match(
-            rf"^{income_keywords}\s+R?\$?\s*(\d+(?:[.,]\d{{1,2}})?)\s*(?:de|do|da|via|por)?\s*(.*)",
+            rf"^{income_keywords}\s+R?\$?\s*(\d+(?:[.,]\d{{1,2}})?)\s*(?:de|do|da|via|por|no|na)?\s*(.*)",
             msg_lower
         )
 
@@ -124,12 +124,12 @@ class WhatsappAgent:
 
         # Nothing matched
         return (
-            "🤔 Não entendi sua mensagem.\n\n"
-            "Tente algo como:\n"
+            "🤔 Não consegui entender seu comando.\n\n"
+            "Tente registrar assim:\n"
             "• _Gastei 50 no Uber_\n"
             "• _Recebi 3000 salário_\n"
-            "• _Saldo_\n\n"
-            "Digite *ajuda* para ver todos os comandos."
+            "• _50 mercado_\n\n"
+            "Ou digite *ajuda* para ver todas as opções."
         )
 
     # ─────────────────────────────────────────────
