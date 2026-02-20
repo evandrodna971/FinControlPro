@@ -217,7 +217,7 @@ export default function Investments() {
                                 ? `$ ${cp.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
                                 : `R$ ${cp.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`)
                             : '-',
-                        change: a.change_24h || 0,
+                        change: (a as any).change_24h || 0,
                         price: cp || Number(a.average_price || 0),
                         currency: a.source_currency === 'USD' ? 'USD' : 'BRL',
                         fromPortfolio: true,
@@ -891,7 +891,7 @@ export default function Investments() {
                                                         </div>
                                                     </div>
                                                     {item.fromPortfolio ? (
-                                                        <Wallet2 className="h-4 w-4 text-blue-500 shrink-0" title="Na sua carteira" />
+                                                        <Wallet2 className="h-4 w-4 text-blue-500 shrink-0" />
                                                     ) : (
                                                         <button
                                                             onClick={(e) => {
