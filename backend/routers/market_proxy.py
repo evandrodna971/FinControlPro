@@ -194,11 +194,21 @@ CRYPTO_ID_MAP = {
     'ada': 'cardano', 'cardano': 'cardano',
     'avax': 'avalanche-2', 'avalanche': 'avalanche-2',
     'dot': 'polkadot', 'polkadot': 'polkadot',
-    'matic': 'matic-network', 'polygon': 'matic-network',
+    'matic': 'matic-network', 'polygon': 'matic-network', 'pol': 'polygon-ecosystem-token',
     'link': 'chainlink', 'chainlink': 'chainlink',
     'ltc': 'litecoin', 'litecoin': 'litecoin',
     'uni': 'uniswap', 'uniswap': 'uniswap',
     'atom': 'cosmos', 'cosmos': 'cosmos',
+    'trx': 'tron', 'tron': 'tron',
+    'shib': 'shiba-inu', 'shiba': 'shiba-inu',
+    'dai': 'dai', 'dai': 'dai',
+    'bch': 'bitcoin-cash', 'bitcoin-cash': 'bitcoin-cash',
+    'near': 'near', 'near': 'near',
+    'kas': 'kaspa', 'kaspa': 'kaspa',
+    'pepe': 'pepe', 'pepe': 'pepe',
+    'apt': 'aptos', 'aptos': 'aptos',
+    'render': 'render-token', 'rndr': 'render-token',
+    'stx': 'blockstack', 'stacks': 'blockstack',
 }
 
 @router.get("/api/proxy/market/crypto")

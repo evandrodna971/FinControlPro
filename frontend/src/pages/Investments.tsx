@@ -159,21 +159,25 @@ export default function Investments() {
                         )
 
                         let realCurrentPrice: number
+                        let isLive = false
+
                         if (quote?.price && quote.price > 0) {
                             realCurrentPrice = quote.price
+                            isLive = true
                             assetsWithUpdatedPrices.push({ id: asset.id, price: realCurrentPrice })
                         } else {
+                            // Se falhou o fetch, usamos o preco armazenado ou o médio como última opção
                             const storedPrice = asset.current_price || 0
                             const avgPrice = asset.average_price || 0
-                            const isSuspect = storedPrice <= 0 || (avgPrice > 0 && storedPrice < avgPrice * 0.1)
-                            realCurrentPrice = isSuspect ? avgPrice : storedPrice
+                            realCurrentPrice = storedPrice > 0 ? storedPrice : avgPrice
                         }
 
                         return {
                             ...asset,
                             current_price: realCurrentPrice,
                             original_price: realCurrentPrice,
-                            change_24h: quote?.change || 0
+                            change_24h: isLive ? (quote?.change || 0) : 0,
+                            is_live_price: isLive
                         }
                     })
 

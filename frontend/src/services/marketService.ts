@@ -437,13 +437,22 @@ export const marketService = {
         const stocks = assets.filter(a => {
             const m = a.market?.toUpperCase();
             const t = a.type?.toLowerCase();
-            return m !== 'CRYPTO' && t !== 'crypto' && !/^(BTC|ETH|SOL|XRP|BNB|DOGE|ADA|AVAX)$/i.test(a.symbol);
+            const isCryptoRegex = /^(BTC|ETH|SOL|XRP|BNB|DOGE|ADA|AVAX|DOT|LINK|MATIC|MATICPO|POL|SHIB|DAI|LTC|UNI|ATOM|TRX|NEAR|KAS|PEPE|APT|RNDR|RENDER|STX)$/i.test(a.symbol);
+
+            // Prioridade para metadados explícitos
+            if (m === 'CRYPTO' || t === 'crypto') return false;
+            if (m === 'BR' || m === 'US' || t === 'stock' || t === 'reit') return true;
+
+            // Fallback para regex
+            return !isCryptoRegex;
         }).map(a => a.symbol)
 
         const cryptos = assets.filter(a => {
             const m = a.market?.toUpperCase();
             const t = a.type?.toLowerCase();
-            return m === 'CRYPTO' || t === 'crypto' || /^(BTC|ETH|SOL|XRP|BNB|DOGE|ADA|AVAX)$/i.test(a.symbol);
+            const isCryptoRegex = /^(BTC|ETH|SOL|XRP|BNB|DOGE|ADA|AVAX|DOT|LINK|MATIC|MATICPO|POL|SHIB|DAI|LTC|UNI|ATOM|TRX|NEAR|KAS|PEPE|APT|RNDR|RENDER|STX)$/i.test(a.symbol);
+
+            return m === 'CRYPTO' || t === 'crypto' || isCryptoRegex;
         }).map(a => a.symbol.toLowerCase())
 
         let stocksData: RankItem[] = []
