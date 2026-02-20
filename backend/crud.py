@@ -441,7 +441,6 @@ def get_dashboard_summary(db: Session, user_id: int, workspace_id: Optional[int]
     except ValueError:
         target_date = datetime(target_year, target_month, 1, 0, 0, 0)
 
-    print(f"DEBUG Dashboard: User={user_id}, Workspace={workspace_id}, Period={period_start} to {period_end}")
     # Determine Summary Period Range based on interval
     # This range applies to "Summary Cards" and "Category Breakdown"
     if interval == "monthly":
@@ -460,6 +459,8 @@ def get_dashboard_summary(db: Session, user_id: int, workspace_id: Optional[int]
         # Default to monthly
         period_start = target_date.replace(day=1)
         period_end = period_start + relativedelta(months=1) - timedelta(days=1)
+
+    print(f"DEBUG Dashboard: User={user_id}, Workspace={workspace_id}, Period={period_start} to {period_end}")
 
     # 1. Overall Totals for the specified PERIOD
     # Use < period_end + 1 day to ensure full month coverage on PostgreSQL
