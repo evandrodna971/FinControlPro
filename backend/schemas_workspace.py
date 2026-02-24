@@ -48,6 +48,7 @@ class NotificationBase(BaseModel):
 class Notification(NotificationBase):
     id: int
     is_read: bool
+    created_at: datetime
 
     class Config:
         from_attributes = True

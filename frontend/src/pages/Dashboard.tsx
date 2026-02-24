@@ -124,14 +124,19 @@ export default function Dashboard() {
     const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]
 
     return (
-        <div className="p-8 space-y-8">
+        <div className="p-4 md:p-8 space-y-6 md:space-y-8 pb-24 md:pb-8">
             <SEO title="Dashboard" description="Visão geral das suas finanças pessoais - saldo, receitas, despesas e metas." />
-            {/* Month/Year Navigation */}
-            <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-                <div className="flex items-center gap-4">
+
+            {/* Header Section */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
+                    <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">Bem-vindo de volta ao seu controle financeiro.</p>
+                </div>
+
+                <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2">
                     <select
-                        className="bg-background border rounded-md px-3 py-1 text-sm h-9"
+                        className="bg-background border rounded-xl px-3 py-1 text-sm h-10 shadow-sm focus:ring-2 focus:ring-primary outline-none"
                         value={chartInterval}
                         onChange={(e) => setChartInterval(e.target.value)}
                     >
@@ -140,83 +145,84 @@ export default function Dashboard() {
                         <option value="monthly">Mensal</option>
                         <option value="yearly">Anual</option>
                     </select>
-                    <div className="flex items-center gap-2">
-                        <Button onClick={handlePrevMonth} variant="outline" size="sm">←</Button>
-                        <span className="text-lg font-medium min-w-[200px] text-center">
+                    <div className="flex items-center justify-between border rounded-xl p-1 bg-muted/20">
+                        <Button onClick={handlePrevMonth} variant="ghost" size="icon" className="h-8 w-8 hover:bg-background">←</Button>
+                        <span className="text-sm font-semibold px-4 min-w-[120px] text-center">
                             {monthNames[selectedMonth - 1]} {selectedYear}
                         </span>
-                        <Button onClick={handleNextMonth} variant="outline" size="sm">→</Button>
+                        <Button onClick={handleNextMonth} variant="ghost" size="icon" className="h-8 w-8 hover:bg-background">→</Button>
                     </div>
                 </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
                 {/* Balance Card */}
-                <Card className="transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer bg-gradient-to-br from-blue-950 to-cyan-950 dark:from-blue-50 dark:to-cyan-50 border-blue-800 dark:border-blue-200">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-blue-300 dark:text-blue-700">Saldo Total</CardTitle>
-                        <Activity className="h-4 w-4 text-blue-400 dark:text-blue-600" />
+                <Card className="transition-all duration-300 hover:shadow-lg border-blue-100 dark:border-blue-900 overflow-hidden relative group">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                        <Activity className="h-12 w-12 text-blue-600" />
+                    </div>
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Saldo Total</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-blue-100 dark:text-blue-900">
+                        <div className="text-2xl md:text-3xl font-black text-blue-600 dark:text-blue-400">
                             R${(summary.total_balance || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </div>
-                        <p className="text-xs text-blue-400 dark:text-blue-600 mt-1">
-                            {summary.total_income > 0 ? (
-                                <>Receitas - Despesas</>
-                            ) : (
-                                <>Sem movimentações</>
-                            )}
-                        </p>
+                        <div className="mt-2 flex items-center gap-1 text-[10px] sm:text-xs">
+                            <span className="text-muted-foreground">Disponível para uso</span>
+                        </div>
                     </CardContent>
                 </Card>
 
                 {/* Income Card */}
-                <Card className="transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer bg-gradient-to-br from-green-950 to-emerald-950 dark:from-green-50 dark:to-emerald-50 border-green-800 dark:border-green-200">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-green-300 dark:text-green-700">Receitas</CardTitle>
-                        <TrendingUp className="h-4 w-4 text-green-400 dark:text-green-600" />
+                <Card className="transition-all duration-300 hover:shadow-lg border-emerald-100 dark:border-emerald-900 overflow-hidden relative group">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                        <TrendingUp className="h-12 w-12 text-emerald-600" />
+                    </div>
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Receitas</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-green-400 dark:text-green-700">
-                            +R${(summary.total_income || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        <div className="text-2xl md:text-3xl font-black text-emerald-600 dark:text-emerald-400">
+                            R${(summary.total_income || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </div>
-                        <p className="text-xs text-green-400 dark:text-green-600 mt-1">
-                            {summary.income_trend.length > 1 && summary.income_trend[summary.income_trend.length - 2]?.value > 0 ? (
-                                <>
-                                    {((summary.total_income - (summary.income_trend[summary.income_trend.length - 2]?.value || 0)) / (summary.income_trend[summary.income_trend.length - 2]?.value || 1) * 100).toFixed(1)}% vs mês anterior
-                                </>
-                            ) : (
-                                <>Período atual</>
+                        <div className="mt-2 flex items-center gap-1 text-[10px] sm:text-xs text-emerald-600 font-medium">
+                            {summary.income_trend.length > 1 && (
+                                <span className="bg-emerald-100 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded-md">
+                                    ↑ {((summary.total_income - (summary.income_trend[summary.income_trend.length - 2]?.value || 0)) / (summary.income_trend[summary.income_trend.length - 2]?.value || 1) * 100).toFixed(0)}%
+                                </span>
                             )}
-                        </p>
+                            <span className="text-muted-foreground font-normal">recebido este mês</span>
+                        </div>
                     </CardContent>
                 </Card>
 
                 {/* Expenses Card */}
-                <Card className="transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer bg-gradient-to-br from-red-950 to-rose-950 dark:from-red-50 dark:to-rose-50 border-red-800 dark:border-red-200">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-red-300 dark:text-red-700">Despesas</CardTitle>
-                        <TrendingDown className="h-4 w-4 text-red-400 dark:text-red-600" />
+                <Card className="transition-all duration-300 hover:shadow-lg border-rose-100 dark:border-rose-900 overflow-hidden relative group">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                        <TrendingDown className="h-12 w-12 text-rose-600" />
+                    </div>
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Despesas</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-red-400 dark:text-red-700">
-                            -R${(summary.total_expenses || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        <div className="text-2xl md:text-3xl font-black text-rose-600 dark:text-rose-400">
+                            R${(summary.total_expenses || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </div>
-                        <p className="text-xs text-red-400 dark:text-red-600 mt-1">
-                            {summary.expense_trend.length > 1 && summary.expense_trend[summary.expense_trend.length - 2]?.value > 0 ? (
-                                <>
-                                    {((summary.total_expenses - (summary.expense_trend[summary.expense_trend.length - 2]?.value || 0)) / (summary.expense_trend[summary.expense_trend.length - 2]?.value || 1) * 100).toFixed(1)}% vs mês anterior
-                                </>
-                            ) : (
-                                <>Período atual</>
+                        <div className="mt-2 flex items-center gap-1 text-[10px] sm:text-xs text-rose-600 font-medium">
+                            {summary.expense_trend.length > 1 && (
+                                <span className="bg-rose-100 dark:bg-rose-900/30 px-1.5 py-0.5 rounded-md">
+                                    ↑ {((summary.total_expenses - (summary.expense_trend[summary.expense_trend.length - 2]?.value || 0)) / (summary.expense_trend[summary.expense_trend.length - 2]?.value || 1) * 100).toFixed(0)}%
+                                </span>
                             )}
-                        </p>
+                            <span className="text-muted-foreground font-normal">gasto este mês</span>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
 
             {/* Financial Health & Savings Goal */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 <FinancialHealthIndicator
                     income={summary.total_income}
                     expenses={summary.total_expenses}
@@ -229,9 +235,9 @@ export default function Dashboard() {
 
             {/* Joint Goals Section */}
             {jointGoals.length > 0 && (
-                <div className="mb-8">
-                    <h2 className="text-2xl font-bold mb-4">Metas Conjuntas 💑</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                    <h2 className="text-xl md:text-2xl font-bold tracking-tight">Metas Conjuntas 💑</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                         {jointGoals.map((goal) => (
                             <JointGoalCard key={goal.id} goal={goal} />
                         ))}
@@ -239,7 +245,8 @@ export default function Dashboard() {
                 </div>
             )}
 
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2 mb-8">
+            {/* Charts Section - Hidden on very small screens */}
+            <div className="hidden min-[320px]:grid grid-cols-1 gap-4 md:gap-6 md:grid-cols-2 mb-8">
                 <TrendChart incomeData={summary.income_trend} expenseData={summary.expense_trend} />
                 <CategoryPieChart
                     expenseData={summary.category_breakdown}
@@ -247,11 +254,16 @@ export default function Dashboard() {
                 />
             </div>
 
-            <div className="mb-8 space-y-4">
+            {/* Mobile Chart Placeholder (for screens < 320px) */}
+            <div className="block min-[320px]:hidden p-4 text-center bg-muted/20 rounded-xl text-xs text-muted-foreground">
+                Gráficos não disponíveis para esta resolução.
+            </div>
+
+            <div className="space-y-4">
                 <div className="flex items-center justify-between px-1">
                     <h2 className="text-xl font-bold tracking-tight">Próximos Vencimentos</h2>
                     <Link to="/transactions">
-                        <Button variant="ghost" size="sm" className="hover:bg-transparent hover:text-primary">
+                        <Button variant="ghost" size="sm" className="text-xs text-primary hover:bg-primary/5">
                             Ver tudo <ArrowRight className="ml-1 w-4 h-4" />
                         </Button>
                     </Link>
@@ -259,26 +271,27 @@ export default function Dashboard() {
                 <UpcomingBills month={selectedMonth} year={selectedYear} onUpdate={fetchData} />
             </div>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex justify-between items-center">
+            <Card className="border-none shadow-md overflow-hidden rounded-3xl">
+                <CardHeader className="bg-muted/10 pb-4">
+                    <CardTitle className="flex justify-between items-center text-lg">
                         Transações Recentes
                         <Link to="/transactions">
-                            <Button variant="ghost" size="sm">Ver tudo</Button>
+                            <Button variant="ghost" size="sm" className="text-xs hover:bg-transparent text-primary">Ver tudo</Button>
                         </Link>
                     </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-6">
                     <RecentTransactionsTimeline transactions={transactions} />
                 </CardContent>
             </Card>
 
-            <Link to="/add-transaction" className="fixed bottom-8 right-8 z-50 group flex items-center gap-2">
+            {/* Floating Action Button - Hidden on Mobile (use MobileNavbar instead) */}
+            <Link to="/add-transaction" className="hidden md:flex fixed bottom-8 right-8 z-50 group items-center gap-2">
                 <span className="bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 shadow-lg border border-slate-700 whitespace-nowrap">
-                    Criar Transação
+                    Nova Transação
                 </span>
-                <Button size="lg" className="rounded-full w-14 h-14 shadow-2xl bg-slate-900 hover:bg-slate-800 hover:scale-110 transition-all duration-300 flex items-center justify-center p-0 border border-slate-700">
-                    <Plus className="w-8 h-8 text-blue-400 group-hover:text-blue-300 group-hover:rotate-90 transition-transform duration-300" />
+                <Button size="lg" className="rounded-2xl w-14 h-14 shadow-2xl bg-primary hover:scale-110 transition-all duration-300 flex items-center justify-center p-0">
+                    <Plus className="w-8 h-8 text-white group-hover:rotate-90 transition-transform duration-300" />
                 </Button>
             </Link>
         </div>

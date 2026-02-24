@@ -63,15 +63,24 @@ def add_team_member(db: Session, workspace_id: int, email: str, role: str):
     )
     db.add(membership)
     
-    # Create Notification
+    # Create Notification if it doesn't exist yet
     workspace = db.query(models.Workspace).filter(models.Workspace.id == workspace_id).first()
-    notification = models.Notification(
-        user_id=user.id,
-        content=f"Você foi convidado para o workspace '{workspace.name}'",
-        type="invite",
-        link_id=workspace_id
-    )
-    db.add(notification)
+    
+    existing_notif = db.query(models.Notification).filter(
+        models.Notification.user_id == user.id,
+        models.Notification.type == "invite",
+        models.Notification.link_id == workspace_id,
+        models.Notification.is_read == False
+    ).first()
+
+    if not existing_notif:
+        notification = models.Notification(
+            user_id=user.id,
+            content=f"Você foi convidado para o workspace '{workspace.name}'",
+            type="invite",
+            link_id=workspace_id
+        )
+        db.add(notification)
     
     db.commit()
     return membership

@@ -195,12 +195,12 @@ export default function Transactions() {
     }, [transactions, searchTerm, typeFilter, statusFilter]);
 
     return (
-        <div className="min-h-screen p-8 bg-background text-foreground">
+        <div className="min-h-screen p-4 md:p-8 bg-background text-foreground pb-24 md:pb-8">
             <SEO title="Transações" description="Gerencie todas as suas receitas e despesas em um só lugar." />
             {/* Delete Modal */}
             {deleteModalOpen && transactionToDelete && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <Card className="w-[400px]">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
+                    <Card className="w-full max-w-md">
                         <CardHeader>
                             <CardTitle>Excluir Transação</CardTitle>
                         </CardHeader>
@@ -210,8 +210,8 @@ export default function Transactions() {
                                     Como deseja excluir a transação <strong>{transactionToDelete.description}</strong>?
                                 </p>
 
-                                <div className="space-y-2">
-                                    <div className="flex items-center space-x-2">
+                                <div className="space-y-4">
+                                    <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/30 cursor-pointer" onClick={() => setDeleteOption('single')}>
                                         <input
                                             type="radio"
                                             id="delete-single"
@@ -221,17 +221,17 @@ export default function Transactions() {
                                             onChange={() => setDeleteOption('single')}
                                             className="h-4 w-4 text-primary border-gray-300 focus:ring-primary"
                                         />
-                                        <label htmlFor="delete-single" className="text-sm font-medium">
+                                        <label htmlFor="delete-single" className="text-sm font-medium cursor-pointer flex-1">
                                             Apenas uma parcela / mês específico
                                         </label>
                                     </div>
 
                                     {deleteOption === 'single' && (
-                                        <div className="ml-6 flex gap-2">
+                                        <div className="ml-7 flex flex-col sm:flex-row gap-3 animate-in fade-in slide-in-from-top-2">
                                             <div className="flex-1">
-                                                <label className="text-xs text-muted-foreground">Mês</label>
+                                                <label className="text-xs text-muted-foreground font-semibold uppercase mb-1 block">Mês</label>
                                                 <select
-                                                    className="w-full border rounded p-1 text-sm bg-background"
+                                                    className="w-full h-10 border rounded-xl p-2 text-sm bg-background border-input"
                                                     value={deleteMonth}
                                                     onChange={(e) => setDeleteMonth(parseInt(e.target.value))}
                                                 >
@@ -241,18 +241,18 @@ export default function Transactions() {
                                                 </select>
                                             </div>
                                             <div className="flex-1">
-                                                <label className="text-xs text-muted-foreground">Ano</label>
+                                                <label className="text-xs text-muted-foreground font-semibold uppercase mb-1 block">Ano</label>
                                                 <Input
                                                     type="number"
                                                     value={deleteYear}
                                                     onChange={(e) => setDeleteYear(parseInt(e.target.value))}
-                                                    className="h-[28px]"
+                                                    className="h-10 rounded-xl"
                                                 />
                                             </div>
                                         </div>
                                     )}
 
-                                    <div className="flex items-center space-x-2">
+                                    <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/30 cursor-pointer" onClick={() => setDeleteOption('all')}>
                                         <input
                                             type="radio"
                                             id="delete-all"
@@ -262,15 +262,15 @@ export default function Transactions() {
                                             onChange={() => setDeleteOption('all')}
                                             className="h-4 w-4 text-primary border-gray-300 focus:ring-primary"
                                         />
-                                        <label htmlFor="delete-all" className="text-sm font-medium">
+                                        <label htmlFor="delete-all" className="text-sm font-medium cursor-pointer flex-1">
                                             Todas as recorrências / TUDO
                                         </label>
                                     </div>
                                 </div>
 
-                                <div className="flex justify-end gap-2 pt-4">
-                                    <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>Cancelar</Button>
-                                    <Button variant="destructive" onClick={confirmDelete}>Excluir</Button>
+                                <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4">
+                                    <Button variant="outline" className="w-full sm:w-auto rounded-xl" onClick={() => setDeleteModalOpen(false)}>Cancelar</Button>
+                                    <Button variant="destructive" className="w-full sm:w-auto rounded-xl" onClick={confirmDelete}>Excluir Agora</Button>
                                 </div>
                             </div>
                         </CardContent>
@@ -278,27 +278,27 @@ export default function Transactions() {
                 </div>
             )}
 
-            <div className="flex justify-between items-center mb-8">
-                <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+                <div className="flex items-center gap-3">
                     <Link to="/dashboard">
-                        <Button variant="ghost" size="icon">
-                            <ArrowLeft className="w-4 h-4" />
+                        <Button variant="ghost" size="icon" className="rounded-full">
+                            <ArrowLeft className="w-5 h-5" />
                         </Button>
                     </Link>
-                    <h1 className="text-3xl font-bold">Todas as Transações</h1>
+                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">Minhas Transações</h1>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                     {selectedIds.size > 0 && (
-                        <Button variant="destructive" onClick={handleBulkDelete}>
+                        <Button variant="destructive" onClick={handleBulkDelete} className="flex-1 sm:flex-none">
                             Excluir ({selectedIds.size})
                         </Button>
                     )}
-                    <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
+                    <Button variant="outline" onClick={() => setImportDialogOpen(true)} className="flex-1 sm:flex-none">
                         <Upload className="w-4 h-4 mr-2" />
-                        Importar CSV (Nubank)
+                        <span className="hidden xs:inline text-xs sm:text-sm">Importar CSV</span>
                     </Button>
-                    <Link to="/add-transaction">
-                        <Button>Nova Transação</Button>
+                    <Link to="/add-transaction" className="flex-1 sm:flex-none">
+                        <Button className="w-full rounded-xl">Nova</Button>
                     </Link>
                 </div>
             </div>
@@ -312,34 +312,33 @@ export default function Transactions() {
                 }}
             />
 
-            <Card className="mb-8">
+            <Card className="mb-8 border-none bg-muted/20">
                 <CardContent className="pt-6">
-                    <div className="flex flex-col md:flex-row gap-4">
+                    <div className="flex flex-col md:flex-row gap-3">
                         <div className="flex-1">
                             <Input
-                                placeholder="Buscar por descrição ou categoria..."
+                                placeholder="Filtrar por descrição..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
+                                className="h-10 rounded-xl bg-background border-none shadow-sm"
                             />
                         </div>
-                        <div className="w-full md:w-[200px]">
+                        <div className="flex gap-2">
                             <select
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                className="h-10 flex-1 md:w-[150px] rounded-xl border-none bg-background px-3 py-2 text-sm shadow-sm focus:ring-2 focus:ring-primary"
                                 value={typeFilter}
                                 onChange={(e) => setTypeFilter(e.target.value as any)}
                             >
-                                <option value="all">Todos os Tipos</option>
+                                <option value="all">Tipos</option>
                                 <option value="income">Receitas</option>
                                 <option value="expense">Despesas</option>
                             </select>
-                        </div>
-                        <div className="w-full md:w-[200px]">
                             <select
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                className="h-10 flex-1 md:w-[150px] rounded-xl border-none bg-background px-3 py-2 text-sm shadow-sm focus:ring-2 focus:ring-primary"
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value as any)}
                             >
-                                <option value="all">Todos os Status</option>
+                                <option value="all">Status</option>
                                 <option value="paid">Pago</option>
                                 <option value="pending">Pendente</option>
                             </select>
@@ -348,18 +347,19 @@ export default function Transactions() {
                 </CardContent>
             </Card>
 
-            <Card>
-                <CardHeader>
-                    <div className="flex justify-between items-center">
-                        <CardTitle>Histórico Completo</CardTitle>
-                        <div className="flex items-center gap-3">
-                            <div className="text-sm text-muted-foreground">
-                                {filteredAndSortedTransactions.length} registros encontrados
+            <Card className="border-none shadow-none bg-transparent">
+                <CardHeader className="px-0 sm:px-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <CardTitle className="text-xl">Histórico Detalhado</CardTitle>
+                        <div className="flex items-center gap-3 w-full sm:w-auto">
+                            <div className="text-xs text-muted-foreground mr-auto">
+                                <strong>{filteredAndSortedTransactions.length}</strong> itens
                             </div>
                             {filteredAndSortedTransactions.length > 0 && (
                                 <Button
-                                    variant="outline"
+                                    variant="ghost"
                                     size="sm"
+                                    className="text-xs h-8 px-2 hover:bg-primary/5 text-primary"
                                     onClick={() => {
                                         if (selectedIds.size === filteredAndSortedTransactions.length) {
                                             setSelectedIds(new Set());
@@ -368,21 +368,23 @@ export default function Transactions() {
                                         }
                                     }}
                                 >
-                                    {selectedIds.size === filteredAndSortedTransactions.length ? 'Desmarcar Todos' : 'Selecionar Todos'}
+                                    {selectedIds.size === filteredAndSortedTransactions.length ? 'Desmarcar' : 'Ver Tudo'}
                                 </Button>
                             )}
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-0 sm:px-6">
                     {loading ? (
-                        <div className="p-8 text-center text-muted-foreground">Carregando...</div>
+                        <div className="p-12 text-center text-muted-foreground animate-pulse">Carregando dados...</div>
                     ) : filteredAndSortedTransactions.length === 0 ? (
-                        <div className="p-8 text-center text-muted-foreground">Nenhuma transação encontrada</div>
+                        <div className="p-12 text-center text-muted-foreground bg-muted/10 rounded-3xl border-2 border-dashed border-border/50">
+                            Nenhuma transação encontrada para este filtro.
+                        </div>
                     ) : (
-                        <div className="relative pl-4 space-y-4">
-                            {/* Continuous Vertical Line */}
-                            <div className="absolute left-[9px] top-2 bottom-4 w-[2px] bg-gradient-to-b from-border/80 via-border/40 to-transparent" />
+                        <div className="relative pl-0 sm:pl-4 space-y-3">
+                            {/* Desktop-only Vertical Line */}
+                            <div className="hidden sm:block absolute left-[9px] top-2 bottom-4 w-[2px] bg-gradient-to-b from-border via-border/40 to-transparent" />
 
                             {filteredAndSortedTransactions.map((t) => {
                                 const isExpense = t.type === 'expense';
@@ -392,129 +394,123 @@ export default function Transactions() {
                                 return (
                                     <div
                                         key={t.id}
-                                        className="relative pl-8 group"
+                                        className="relative sm:pl-8 group"
                                     >
-                                        {/* Timeline Node - Centered Vertically */}
-                                        <div className={`absolute left-[2px] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 border-background shadow-sm z-10 ${isExpense ? "bg-rose-500 ring-4 ring-rose-500/10" : "bg-emerald-500 ring-4 ring-emerald-500/10"
+                                        {/* Timeline Node - Desktop only */}
+                                        <div className={`hidden sm:block absolute left-[2px] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 border-background shadow-sm z-10 ${isExpense ? "bg-rose-500 ring-4 ring-rose-500/10" : "bg-emerald-500 ring-4 ring-emerald-500/10"
                                             }`} />
 
-                                        {/* Card Content */}
-                                        <div className={`flex items-center justify-between p-4 rounded-xl bg-card border border-border/60 shadow-sm hover:shadow-md transition-all duration-300 ${selectedIds.has(t.id) ? 'ring-2 ring-primary/50 bg-primary/5' : ''
+                                        {/* Responsive Card Item */}
+                                        <div className={`p-4 rounded-2xl bg-card border border-border/40 shadow-sm hover:shadow-md transition-all duration-300 ${selectedIds.has(t.id) ? 'ring-2 ring-primary bg-primary/5' : ''
                                             }`}>
 
-                                            {/* Left Side: Checkbox + Category Badge & Description */}
-                                            <div className="flex items-center gap-4 overflow-hidden flex-1">
-                                                {/* Checkbox */}
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedIds.has(t.id)}
-                                                    onChange={() => toggleSelection(t.id)}
-                                                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary flex-shrink-0"
-                                                />
+                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 
-                                                {/* Category Icon */}
-                                                <div
-                                                    className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center shadow-inner text-white"
-                                                    style={{ backgroundColor: t.category_color || '#64748b' }}
-                                                >
-                                                    {React.createElement(IconComponent, { className: "w-6 h-6" })}
+                                                {/* Left Section: Checkbox + Icon + Info */}
+                                                <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedIds.has(t.id)}
+                                                        onChange={() => toggleSelection(t.id)}
+                                                        className="h-5 w-5 sm:h-4 sm:w-4 rounded-lg border-gray-300 text-primary focus:ring-primary"
+                                                    />
+
+                                                    <div
+                                                        className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shadow-inner text-white"
+                                                        style={{ backgroundColor: t.category_color || '#64748b' }}
+                                                    >
+                                                        {React.createElement(IconComponent, { className: "w-5 h-5 sm:w-6 sm:h-6" })}
+                                                    </div>
+
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="flex items-center gap-2 mb-0.5">
+                                                            <h4 className="font-bold text-sm sm:text-base truncate text-foreground leading-tight" title={t.description}>
+                                                                {t.description}
+                                                            </h4>
+                                                            {(t.created_by_user_id || t.is_joint) && (
+                                                                <div className="hidden xs:block">
+                                                                    <UserBadge
+                                                                        userName={t.created_by_name || 'Usuário'}
+                                                                        color={t.created_by_color || '#3b82f6'}
+                                                                        emoji={t.created_by_emoji || '👤'}
+                                                                        isJoint={t.is_joint}
+                                                                        size="sm"
+                                                                    />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex items-center gap-2 text-[10px] sm:text-xs text-muted-foreground">
+                                                            <span>{dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}</span>
+                                                            <span className="w-1 h-1 rounded-full bg-border" />
+                                                            <span className="truncate">{t.category_name || "Sem categoria"}</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
 
-                                                <div className="min-w-0 space-y-1 flex-1">
-                                                    <div className="flex items-center gap-2">
-                                                        <h4 className="font-semibold text-sm truncate text-foreground" title={t.description}>
-                                                            {t.description}
-                                                        </h4>
-                                                        {(t.created_by_user_id || t.is_joint) && (
-                                                            <UserBadge
-                                                                userName={t.created_by_name || 'Usuário'}
-                                                                color={t.created_by_color || '#3b82f6'}
-                                                                emoji={t.created_by_emoji || '👤'}
-                                                                isJoint={t.is_joint}
-                                                                size="sm"
-                                                            />
-                                                        )}
-                                                    </div>
-                                                    <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-                                                        <span className="flex items-center gap-1 bg-muted/50 px-2 py-0.5 rounded-md">
-                                                            {dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                {/* Middle Section: Status & Meta (Responsive position) */}
+                                                <div className="flex items-center justify-between sm:justify-start gap-4">
+                                                    <div className="flex flex-wrap gap-1.5 sm:hidden">
+                                                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${t.status === 'paid' ? 'bg-emerald-100/50 text-emerald-700' : 'bg-amber-100/50 text-amber-700'}`}>
+                                                            {t.status === 'paid' ? 'Pago' : 'Pendente'}
                                                         </span>
-                                                        <span className="bg-muted/50 px-2 py-0.5 rounded-md">
-                                                            {t.category_name || "Sem Categoria"}
-                                                        </span>
-                                                        {t.installment_count && t.installment_count > 1 && (
-                                                            <span className="bg-muted px-1.5 py-0.5 rounded text-[10px] font-medium border border-border">
+                                                        {t.installment_count && (
+                                                            <span className="bg-muted px-2 py-0.5 rounded-full text-[9px] font-bold text-muted-foreground uppercase">
                                                                 {t.installment_count}x
                                                             </span>
                                                         )}
-                                                        {t.is_recurring && (
-                                                            <span className="bg-blue-500/20 text-blue-500 px-1.5 py-0.5 rounded text-[10px] font-medium">
-                                                                Recorrente
-                                                            </span>
-                                                        )}
-                                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${t.status === 'paid' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
-                                                            t.status === 'overdue' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' :
-                                                                'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
-                                                            }`}>
-                                                            {t.status === 'paid' ? 'Pago' : t.status === 'overdue' ? 'Atrasado' : 'Pendente'}
-                                                        </span>
                                                     </div>
-                                                </div>
-                                            </div>
 
-                                            {/* Right Side: Amount + Actions */}
-                                            <div className="flex items-center gap-4 shrink-0">
-                                                {/* Amount */}
-                                                <div className="text-right">
-                                                    <span className={`font-bold text-base block whitespace-nowrap ${isExpense ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"
-                                                        }`}>
-                                                        {isExpense ? '-' : '+'}
-                                                        {(t.total_value || t.amount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                                                    </span>
-                                                    <span className={`text-[10px] uppercase font-bold tracking-wide block mt-0.5 ${isExpense ? "text-rose-600/60" : "text-emerald-600/60"
-                                                        }`}>
-                                                        {isExpense ? 'Despesa' : 'Receita'}
-                                                    </span>
-                                                </div>
+                                                    {/* Right Section: Price & Actions */}
+                                                    <div className="flex items-center gap-4 ml-auto sm:ml-0">
+                                                        <div className="text-right">
+                                                            <div className={`font-black text-sm sm:text-base ${isExpense ? "text-rose-500" : "text-emerald-500"}`}>
+                                                                {isExpense ? '-' : '+'}
+                                                                {(t.total_value || t.amount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                                            </div>
+                                                            <div className="hidden sm:flex items-center justify-end gap-2 mt-0.5">
+                                                                <span className={`text-[10px] font-bold uppercase tracking-widest ${t.status === 'paid' ? 'text-emerald-500/60' : 'text-amber-500/60'}`}>
+                                                                    {t.status === 'paid' ? 'Concluído' : 'Pendente'}
+                                                                </span>
+                                                            </div>
+                                                        </div>
 
-                                                {/* Actions */}
-                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    {t.status === 'pending' && (
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8 text-green-500 hover:bg-green-100 hover:text-green-700"
-                                                            onClick={async () => {
-                                                                try {
-                                                                    await api.post(`/transactions/${t.id}/pay`);
-                                                                    setTransactions(prev => prev.map(tr => tr.id === t.id ? { ...tr, status: 'paid' } : tr));
-                                                                } catch (e) {
-                                                                    alert("Erro ao pagar transação");
-                                                                }
-                                                            }}
-                                                            title="Marcar como Pago"
-                                                        >
-                                                            <ArrowUp className="w-4 h-4" />
-                                                        </Button>
-                                                    )}
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-blue-500 hover:bg-blue-100 hover:text-blue-700"
-                                                        onClick={() => navigate(`/add-transaction?id=${t.id}`)}
-                                                        title="Editar"
-                                                    >
-                                                        <Edit className="w-4 h-4" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-red-500 hover:bg-red-100 hover:text-red-700"
-                                                        onClick={() => openDeleteModal(t)}
-                                                        title="Excluir"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </Button>
+                                                        {/* Actions Container - Fixed to Right */}
+                                                        <div className="flex items-center gap-1">
+                                                            {t.status === 'pending' && (
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-9 w-9 text-emerald-500 bg-emerald-50 sm:bg-transparent"
+                                                                    onClick={async () => {
+                                                                        try {
+                                                                            await api.post(`/transactions/${t.id}/pay`);
+                                                                            setTransactions(prev => prev.map(tr => tr.id === t.id ? { ...tr, status: 'paid' } : tr));
+                                                                        } catch (e) {
+                                                                            alert("Erro ao pagar");
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <ArrowUp className="w-4 h-4" />
+                                                                </Button>
+                                                            )}
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-9 w-9 text-blue-500 bg-blue-50 sm:bg-transparent"
+                                                                onClick={() => navigate(`/add-transaction?id=${t.id}`)}
+                                                            >
+                                                                <Edit className="w-4 h-4" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-9 w-9 text-rose-500 bg-rose-50 sm:bg-transparent"
+                                                                onClick={() => openDeleteModal(t)}
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </Button>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>

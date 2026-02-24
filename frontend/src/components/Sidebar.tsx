@@ -39,7 +39,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
     return (
         <aside
             className={cn(
-                "h-screen bg-card border-r transition-all duration-300 ease-in-out flex flex-col z-40 sticky top-0",
+                "h-screen bg-card border-r transition-all duration-300 ease-in-out hidden md:flex flex-col z-40 sticky top-0",
                 isCollapsed ? "w-16" : "w-64"
             )}
         >

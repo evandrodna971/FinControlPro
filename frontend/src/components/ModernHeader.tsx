@@ -53,7 +53,7 @@ export function ModernHeader() {
             <div className="container mx-auto px-6">
                 <div className="flex items-center justify-between h-16 gap-4">
                     {/* Logo Section (Left) */}
-                    <Link to="/dashboard" className="flex items-center gap-3 group">
+                    <Link to="/dashboard" className="flex items-center gap-2 group shrink-0">
                         {/* Animated Icon */}
                         <motion.div
                             animate={{
@@ -68,32 +68,34 @@ export function ModernHeader() {
                             className="relative"
                         >
                             <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg blur-md opacity-50 group-hover:opacity-75 transition-opacity" />
-                            <div className="relative bg-gradient-to-br from-blue-500 to-cyan-500 p-2 rounded-lg">
-                                <TrendingUp className="w-5 h-5 text-white" />
+                            <div className="relative bg-gradient-to-br from-blue-500 to-cyan-500 p-1.5 md:p-2 rounded-lg">
+                                <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-white" />
                             </div>
                         </motion.div>
 
-                        {/* Logo Text */}
-                        <div className="flex flex-col">
-                            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 dark:from-blue-400 dark:to-cyan-400 bg-clip-text text-transparent">
+                        {/* Logo Text - Hidden on mobile */}
+                        <div className="hidden sm:flex flex-col">
+                            <span className="text-lg md:text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 dark:from-blue-400 dark:to-cyan-400 bg-clip-text text-transparent leading-none">
                                 FinControlPro
                             </span>
-                            <span className="text-[10px] text-muted-foreground -mt-1">
-                                Controle Financeiro Inteligente
+                            <span className="text-[10px] text-muted-foreground">
+                                Controle Financeiro
                             </span>
                         </div>
                     </Link>
 
                     {/* Actions Section (Right) */}
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5 md:gap-3">
                         {/* Global Search */}
                         <GlobalSearch />
 
                         {/* Notifications */}
                         <NotificationCenter />
 
-                        {/* Theme Toggle */}
-                        <ThemeToggle />
+                        {/* Theme Toggle - Hidden on very small mobile */}
+                        <div className="hidden xs:block">
+                            <ThemeToggle />
+                        </div>
 
                         {/* Month Selector */}
                         <MonthSelector

@@ -1,5 +1,6 @@
 import { ModernHeader } from './ModernHeader'
 import { Sidebar } from './Sidebar'
+import { MobileNavbar } from './MobileNavbar'
 import { useLocation } from 'react-router-dom'
 import { useState } from 'react'
 
@@ -26,11 +27,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             />
             <div className="flex-1 flex flex-col min-w-0">
                 <ModernHeader />
-                <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-muted/10">
+                <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-muted/10 pb-20 md:pb-6">
                     <div className="mx-auto max-w-7xl animate-in fade-in duration-500">
                         {children}
                     </div>
                 </main>
+                <MobileNavbar />
             </div>
         </div>
     )

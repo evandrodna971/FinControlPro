@@ -77,3 +77,15 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-area-bottom {
+    margin-bottom: env(safe-area-inset-bottom);
+  }
+}
