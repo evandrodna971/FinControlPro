@@ -157,65 +157,68 @@ export default function Dashboard() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
                 {/* Balance Card */}
-                <Card className="transition-all duration-300 hover:shadow-lg border-blue-100 dark:border-blue-900 overflow-hidden relative group">
+                <Card className="transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer bg-gradient-to-br from-blue-950 to-cyan-950 dark:from-blue-50 dark:to-cyan-50 border-blue-800 dark:border-blue-200 overflow-hidden relative group">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-                        <Activity className="h-12 w-12 text-blue-600" />
+                        <Activity className="h-12 w-12 text-blue-400 dark:text-blue-600" />
                     </div>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Saldo Total</CardTitle>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-blue-300 dark:text-blue-700">Saldo Total</CardTitle>
+                        <Activity className="h-4 w-4 text-blue-400 dark:text-blue-600 md:hidden" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl md:text-3xl font-black text-blue-600 dark:text-blue-400">
+                        <div className="text-2xl md:text-3xl font-bold text-blue-100 dark:text-blue-900">
                             R${(summary.total_balance || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </div>
-                        <div className="mt-2 flex items-center gap-1 text-[10px] sm:text-xs">
-                            <span className="text-muted-foreground">Disponível para uso</span>
-                        </div>
+                        <p className="text-xs text-blue-400 dark:text-blue-600 mt-1">
+                            Disponível para uso
+                        </p>
                     </CardContent>
                 </Card>
 
                 {/* Income Card */}
-                <Card className="transition-all duration-300 hover:shadow-lg border-emerald-100 dark:border-emerald-900 overflow-hidden relative group">
+                <Card className="transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer bg-gradient-to-br from-green-950 to-emerald-950 dark:from-green-50 dark:to-emerald-50 border-green-800 dark:border-green-200 overflow-hidden relative group">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-                        <TrendingUp className="h-12 w-12 text-emerald-600" />
+                        <TrendingUp className="h-12 w-12 text-green-400 dark:text-green-600" />
                     </div>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Receitas</CardTitle>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-green-300 dark:text-green-700">Receitas</CardTitle>
+                        <TrendingUp className="h-4 w-4 text-green-400 dark:text-green-600 md:hidden" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl md:text-3xl font-black text-emerald-600 dark:text-emerald-400">
-                            R${(summary.total_income || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        <div className="text-2xl md:text-3xl font-bold text-green-400 dark:text-green-700">
+                            +R${(summary.total_income || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </div>
-                        <div className="mt-2 flex items-center gap-1 text-[10px] sm:text-xs text-emerald-600 font-medium">
+                        <div className="mt-1 flex items-center gap-1 text-[10px] sm:text-xs text-green-400 dark:text-green-600 font-medium">
                             {summary.income_trend.length > 1 && (
-                                <span className="bg-emerald-100 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded-md">
+                                <span className="bg-green-900/30 dark:bg-green-100 px-1.5 py-0.5 rounded-md">
                                     ↑ {((summary.total_income - (summary.income_trend[summary.income_trend.length - 2]?.value || 0)) / (summary.income_trend[summary.income_trend.length - 2]?.value || 1) * 100).toFixed(0)}%
                                 </span>
                             )}
-                            <span className="text-muted-foreground font-normal">recebido este mês</span>
+                            <span className="font-normal opacity-80">recebido este mês</span>
                         </div>
                     </CardContent>
                 </Card>
 
                 {/* Expenses Card */}
-                <Card className="transition-all duration-300 hover:shadow-lg border-rose-100 dark:border-rose-900 overflow-hidden relative group">
+                <Card className="transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer bg-gradient-to-br from-red-950 to-rose-950 dark:from-red-50 dark:to-rose-50 border-red-800 dark:border-red-200 overflow-hidden relative group">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-                        <TrendingDown className="h-12 w-12 text-rose-600" />
+                        <TrendingDown className="h-12 w-12 text-red-400 dark:text-red-600" />
                     </div>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Despesas</CardTitle>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-red-300 dark:text-red-700">Despesas</CardTitle>
+                        <TrendingDown className="h-4 w-4 text-red-400 dark:text-red-600 md:hidden" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl md:text-3xl font-black text-rose-600 dark:text-rose-400">
-                            R${(summary.total_expenses || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        <div className="text-2xl md:text-3xl font-bold text-red-400 dark:text-red-700">
+                            -R${(summary.total_expenses || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </div>
-                        <div className="mt-2 flex items-center gap-1 text-[10px] sm:text-xs text-rose-600 font-medium">
+                        <div className="mt-1 flex items-center gap-1 text-[10px] sm:text-xs text-red-400 dark:text-red-600 font-medium">
                             {summary.expense_trend.length > 1 && (
-                                <span className="bg-rose-100 dark:bg-rose-900/30 px-1.5 py-0.5 rounded-md">
+                                <span className="bg-red-900/30 dark:bg-red-100 px-1.5 py-0.5 rounded-md">
                                     ↑ {((summary.total_expenses - (summary.expense_trend[summary.expense_trend.length - 2]?.value || 0)) / (summary.expense_trend[summary.expense_trend.length - 2]?.value || 1) * 100).toFixed(0)}%
                                 </span>
                             )}
-                            <span className="text-muted-foreground font-normal">gasto este mês</span>
+                            <span className="font-normal opacity-80">gasto este mês</span>
                         </div>
                     </CardContent>
                 </Card>

@@ -92,10 +92,8 @@ export function ModernHeader() {
                         {/* Notifications */}
                         <NotificationCenter />
 
-                        {/* Theme Toggle - Hidden on very small mobile */}
-                        <div className="hidden xs:block">
-                            <ThemeToggle />
-                        </div>
+                        {/* Theme Toggle */}
+                        <ThemeToggle />
 
                         {/* Month Selector */}
                         <MonthSelector
