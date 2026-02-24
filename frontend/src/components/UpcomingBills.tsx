@@ -8,6 +8,7 @@ interface Transaction {
     id: number;
     description: string;
     amount: number;
+    date: string;
     due_date: string;
     status: string;
     type: string;
@@ -69,7 +70,7 @@ export function UpcomingBills({ month, year, onUpdate }: { month: number, year: 
         >
             <AnimatePresence>
                 {bills.map((bill) => {
-                    const billDate = new Date(bill.due_date);
+                    const billDate = new Date(bill.due_date || bill.date);
                     const isInvalidDate = isNaN(billDate.getTime());
                     const isOverdue = !isInvalidDate && billDate < new Date() && new Date().toDateString() !== billDate.toDateString()
                     const isToday = !isInvalidDate && new Date().toDateString() === billDate.toDateString()

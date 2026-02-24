@@ -351,6 +351,7 @@ class WhatsappAgent:
             payment_method=payment_method,
             status=status,
             paid_at=tx_date if status == "paid" else None,
+            due_date=tx_date if status == "pending" else None,
             installment_count=installment_count,
             is_recurring=is_recurring,
             recurrence_period=recurrence_period
