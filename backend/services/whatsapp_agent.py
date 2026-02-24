@@ -161,8 +161,8 @@ class WhatsappAgent:
         verb_prefixes = r"(?:vou|irei|quero|queria|planejo|agendar|agendado[oa]?|preciso|devo|tenho que)?\s*"
 
         # Patterns for expenses
-        # "gastei 50 no uber", "vou pagar 120 luz", "pagar 30 farmacia"
-        expense_keywords = r"(?:gastei|paguei|pagar|comprei|compra|pago|gastos|despesa|debito|debitei)"
+        # "gastei 50 no uber", "vou pagar 120 luz", "assinatura netflix 44"
+        expense_keywords = r"(?:gastei|paguei|pagar|comprei|compra|pago|gastos|despesa|debito|debitei|assinatura|plano|mensalidade)"
         expense_match = re.match(
             rf"^{verb_prefixes}({expense_keywords})\s+R?\$?\s*(\d+(?:[.,]\d{{1,2}})?)\s*(?:no|na|em|com|de|do|da|pra|pro|para|at[eé]|no\(a\))?\s*(.*)",
             msg_lower
@@ -215,6 +215,33 @@ class WhatsappAgent:
                 amount_str=simple_match.group(1),
                 description=simple_match.group(2),
                 tx_type="expense",
+                status=status,
+                custom_date=target_date,
+                payment_method=detected_payment_method,
+                installment_count=installment_count,
+                is_recurring=is_recurring,
+                recurrence_period=recurrence_period
+            )
+
+        # Flexible pattern: "Netflix 44,50", "Uber 30"
+        # Matches <description> <amount> <rest of message>
+        flexible_match = re.match(
+            rf"^(.*?)\s+R?\$?\s*(\d+(?:[.,]\d{{1,2}})?)(?:\s+(.*))?$",
+            msg_lower
+        )
+        # Avoid matching commands or pure numbers
+        if flexible_match and flexible_match.group(1).strip() not in ("ajuda", "saldo", "ultimas", "recentes", "meta"):
+            desc_part1 = flexible_match.group(1)
+            amount_str = flexible_match.group(2)
+            desc_part2 = flexible_match.group(3) or ""
+            
+            # Combine description and check if it sounds like an expense
+            full_desc = f"{desc_part1} {desc_part2}".strip()
+            
+            return self._create_transaction(
+                amount_str=amount_str,
+                description=full_desc,
+                tx_type="expense", # Default to expense for this pattern
                 status=status,
                 custom_date=target_date,
                 payment_method=detected_payment_method,
