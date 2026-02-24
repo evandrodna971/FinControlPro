@@ -18,7 +18,9 @@ def create_workspace(
         return ws
     except Exception as e:
         print(f"Error creating workspace: {e}")
-        raise e
+        if "Limite" in str(e):
+            raise HTTPException(status_code=403, detail=str(e))
+        raise HTTPException(status_code=500, detail="Erro interno ao criar workspace")
 
 @router.post("/{workspace_id}/invite")
 def invite_member(

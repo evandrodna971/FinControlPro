@@ -3,6 +3,15 @@ from . import models, schemas_workspace
 from datetime import datetime
 
 def create_workspace(db: Session, workspace: schemas_workspace.WorkspaceCreate, user_id: int):
+    # Check limit: max 5 workspaces as owner
+    current_workspaces_count = db.query(models.UserWorkspace).filter(
+        models.UserWorkspace.user_id == user_id,
+        models.UserWorkspace.role == "owner"
+    ).count()
+
+    if current_workspaces_count >= 5:
+        raise Exception("Limite de 5 Áreas de Trabalho atingido. Exclua uma para criar uma nova.")
+
     # Create the workspace
     db_workspace = models.Workspace(name=workspace.name, type=workspace.type)
     db.add(db_workspace)

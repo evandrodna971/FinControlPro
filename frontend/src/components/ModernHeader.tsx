@@ -6,6 +6,7 @@ import { MonthSelector } from './MonthSelector';
 import { MonthProgressBar } from './MonthProgressBar';
 import { GlobalSearch } from './GlobalSearch';
 import { ThemeToggle } from './ThemeToggle';
+import { NotificationCenter } from './NotificationCenter';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -15,8 +16,10 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useMonth } from '@/context/MonthContext';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export function ModernHeader() {
+    const { logout } = useAuthStore();
     const [scrolled, setScrolled] = useState(false);
     const { selectedMonth, selectedYear, setMonthAndYear } = useMonth();
 
@@ -31,7 +34,7 @@ export function ModernHeader() {
     }, []);
 
     const handleLogout = () => {
-        localStorage.removeItem('token');
+        logout();
         window.location.href = '/login';
     };
 
@@ -85,6 +88,9 @@ export function ModernHeader() {
                     <div className="flex items-center gap-3">
                         {/* Global Search */}
                         <GlobalSearch />
+
+                        {/* Notifications */}
+                        <NotificationCenter />
 
                         {/* Theme Toggle */}
                         <ThemeToggle />
