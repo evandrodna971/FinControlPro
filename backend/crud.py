@@ -151,6 +151,7 @@ def create_user_transaction(db: Session, transaction: schemas_transaction.Transa
             db_transaction = models.Transaction(
                 **transaction.model_dump(exclude={"installment_number", "parent_id", "date", "amount", "due_date", "reminder", "status"}),
                 user_id=user_id,
+                created_by_user_id=user_id,
                 workspace_id=workspace_id,
                 installment_number=i,
                 date=installment_date,
@@ -183,6 +184,7 @@ def create_user_transaction(db: Session, transaction: schemas_transaction.Transa
             db_transaction = models.Transaction(
                 **transaction.model_dump(exclude={"date", "due_date", "reminder", "status"}),
                 user_id=user_id,
+                created_by_user_id=user_id,
                 workspace_id=workspace_id,
                 date=recur_date,
                 due_date=recur_due_date,
@@ -205,6 +207,7 @@ def create_user_transaction(db: Session, transaction: schemas_transaction.Transa
     db_transaction = models.Transaction(
         **transaction.model_dump(exclude={"installment_number", "parent_id", "reminder", "status"}),
         user_id=user_id,
+        created_by_user_id=user_id,
         workspace_id=workspace_id,
         status=transaction.status
     )
