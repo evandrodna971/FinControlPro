@@ -58,13 +58,28 @@ class WhatsappAgent:
 
         # --- TIME & STATUS DETECTION ---
         # Look for future indicators: verbs in future or intent
-        future_keywords = r"(?:vou|irei|agendar|agendado[oa]?|vencimento|para|pro|previsto[oa]?|a pagar|a receber|boleto)"
-        is_future = bool(re.search(future_keywords, msg_lower))
+        future_regex = r"(?:vou|irei|planejo|agendar|agendado[oa]?|vencimento|para|pro|previsto[oa]?|a pagar|a receber|amanh[aã]|amanha|boleto)"
+        is_future = bool(re.search(future_regex, msg_lower))
         
         # Immediate indicators of "paid/received" status: past verbs or confirmation
-        # Removed "pix" and "receita" because they are neutral (can be used in future or past)
-        paid_keywords = r"(?:paguei|recebi|gastei|ja|concluido|feito|pago|recebido|quitado|liquidado)"
-        is_paid_explicit = bool(re.search(paid_keywords, msg_lower))
+        paid_regex = r"(?:paguei|recebi|gastei|ja|concluido|feito|pago|recebido|quitado|liquidado|hoje|ontem)"
+        is_paid_explicit = bool(re.search(paid_regex, msg_lower))
+
+        # Payment Methods
+        payment_methods = {
+            "pix": "Pix",
+            "cartao": "Cartão",
+            "transferencia": "Transferência",
+            "boleto": "Boleto",
+            "dinheiro": "Dinheiro",
+            "debito": "Débito",
+            "credito": "Crédito"
+        }
+        detected_payment_method = "Outros"
+        for key, val in payment_methods.items():
+            if key in msg_normalized:
+                detected_payment_method = val
+                break
 
         # Decision: If explicitly future verbs are used, it's pending unless explicitly confirmed as paid
         if is_future and not is_paid_explicit:
@@ -142,7 +157,8 @@ class WhatsappAgent:
                 description=expense_match.group(3),
                 tx_type="expense",
                 status=status,
-                custom_date=target_date
+                custom_date=target_date,
+                payment_method=detected_payment_method
             )
 
         # Patterns for income
@@ -159,7 +175,8 @@ class WhatsappAgent:
                 description=income_match.group(3),
                 tx_type="income",
                 status=status,
-                custom_date=target_date
+                custom_date=target_date,
+                payment_method=detected_payment_method
             )
 
         # Fallback pattern: just a number + description (treated as expense)
@@ -176,7 +193,8 @@ class WhatsappAgent:
                 description=simple_match.group(2),
                 tx_type="expense",
                 status=status,
-                custom_date=target_date
+                custom_date=target_date,
+                payment_method=detected_payment_method
             )
 
         # Nothing matched
@@ -193,7 +211,7 @@ class WhatsappAgent:
     # TRANSACTION CREATION
     # ─────────────────────────────────────────────
 
-    def _create_transaction(self, amount_str: str, description: str, tx_type: str, status: str = "paid", custom_date=None) -> str:
+    def _create_transaction(self, amount_str: str, description: str, tx_type: str, status: str = "paid", custom_date=None, payment_method: str = "Outros") -> str:
         """Create a transaction from parsed message data."""
         # Parse amount
         amount_str = amount_str.replace(",", ".")
@@ -210,8 +228,18 @@ class WhatsappAgent:
         # Remove "reais" or "real" if it's the first word after the amount
         description = re.sub(r"^(?:reais|real)\s*", "", description, flags=re.IGNORECASE).strip()
         
+        # Remove relative date keywords (ontem, hoje, amanha)
+        description = re.sub(r"\b(ontem|hoje|amanhã|amanha)\b", "", description, flags=re.IGNORECASE).strip()
+
+        # Remove payment methods from description
+        description = re.sub(r"\b(pix|cartão|cartao|tranferencia|transferencia|boleto|dinheiro|debito|débito|credito|crédito)\b", "", description, flags=re.IGNORECASE).strip()
+
         # Remove date mention if it's trailing like "dia 22/03", "para 25/02", "p/ 30/01"
-        description = re.sub(r"\s+(?:dia|para|pro|p/|em)\s+\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?$", "", description, flags=re.IGNORECASE).strip()
+        description = re.sub(r"\s+(?:no dia|dia|para|pro|p/|em)?\s*\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?$", "", description, flags=re.IGNORECASE).strip()
+
+        # Extra cleanup: double spaces and common connecting words at the end
+        description = re.sub(r"\s+", " ", description)
+        description = re.sub(r"\s+(?:no|na|de|do|da|com|por|via|em)$", "", description, flags=re.IGNORECASE).strip()
 
         if not description:
             description = "Despesa via WhatsApp" if tx_type == "expense" else "Receita via WhatsApp"
@@ -260,7 +288,7 @@ class WhatsappAgent:
             date=tx_date,
             type=tx_type,
             category_id=category_id,
-            payment_method="Outros",
+            payment_method=payment_method,
             status=status,
             paid_at=tx_date if status == "paid" else None
         )
@@ -282,7 +310,7 @@ class WhatsappAgent:
             f"💵 *Valor:* R$ {amount:,.2f}\n"
             f"📝 *Descrição:* {description}\n"
             f"{cat_label}\n"
-            f"📅 *Data:* {now.strftime('%d/%m/%Y %H:%M')}\n\n"
+            f"📅 *Data:* {tx_date.strftime('%d/%m/%Y %H:%M')}\n\n"
             f"_Digite *desfazer* para cancelar._"
         )
 
