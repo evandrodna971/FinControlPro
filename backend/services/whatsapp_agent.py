@@ -31,6 +31,8 @@ class WhatsappAgent:
         "📝 *Registrar Transações:*\n"
         "• _Gastei 50 no Uber_ (Hoje, Pago)\n"
         "• _Vou pagar 150 Internet dia 10/03_ (Agendado, Pendente)\n"
+        "• _Compra 1200 iphone em 10x_ (Parcelamento automático)\n"
+        "• _Assinatura Netflix 50 fixo mensal_ (Recorrência mensal)\n"
         "• _Recebi 3500 salário ontem_ (Data retroativa)\n"
         "• _20 mercado_ (Atalho rápido para despesa)\n\n"
         "📊 *Consultas Rápidas:*\n"
@@ -92,6 +94,21 @@ class WhatsappAgent:
                 status = "pending"
             else:
                 status = "paid" # Default for "50 uber"
+
+        # --- RECURRENCE & INSTALLMENTS EXTRACTION ---
+        installment_count = 1
+        is_recurring = False
+        recurrence_period = None
+
+        # Look for installments: "10x", "em 10 vezes", "10 parcelas"
+        installment_match = re.search(r"(\d{1,2})\s*(?:x|vezes|parcelas)", msg_lower)
+        if installment_match:
+            installment_count = int(installment_match.group(1))
+
+        # Look for recurrence: "mensal", "todo mes", "fixo", "recorrente"
+        if re.search(r"(mensal|todo mes|todo mês|fixo|recorrente|assinatura)", msg_lower):
+            is_recurring = True
+            recurrence_period = "monthly"
 
         # --- DATE EXTRACTION ---
         target_date = datetime.now()
@@ -158,7 +175,10 @@ class WhatsappAgent:
                 tx_type="expense",
                 status=status,
                 custom_date=target_date,
-                payment_method=detected_payment_method
+                payment_method=detected_payment_method,
+                installment_count=installment_count,
+                is_recurring=is_recurring,
+                recurrence_period=recurrence_period
             )
 
         # Patterns for income
@@ -176,7 +196,10 @@ class WhatsappAgent:
                 tx_type="income",
                 status=status,
                 custom_date=target_date,
-                payment_method=detected_payment_method
+                payment_method=detected_payment_method,
+                installment_count=installment_count,
+                is_recurring=is_recurring,
+                recurrence_period=recurrence_period
             )
 
         # Fallback pattern: just a number + description (treated as expense)
@@ -194,7 +217,10 @@ class WhatsappAgent:
                 tx_type="expense",
                 status=status,
                 custom_date=target_date,
-                payment_method=detected_payment_method
+                payment_method=detected_payment_method,
+                installment_count=installment_count,
+                is_recurring=is_recurring,
+                recurrence_period=recurrence_period
             )
 
         # Nothing matched
@@ -211,7 +237,10 @@ class WhatsappAgent:
     # TRANSACTION CREATION
     # ─────────────────────────────────────────────
 
-    def _create_transaction(self, amount_str: str, description: str, tx_type: str, status: str = "paid", custom_date=None, payment_method: str = "Outros") -> str:
+    def _create_transaction(self, amount_str: str, description: str, tx_type: str, status: str = "paid", 
+                            custom_date=None, payment_method: str = "Outros", 
+                            installment_count: int = 1, is_recurring: bool = False, 
+                            recurrence_period: str = None) -> str:
         """Create a transaction from parsed message data."""
         # Parse amount
         amount_str = amount_str.replace(",", ".")
@@ -234,12 +263,16 @@ class WhatsappAgent:
         # Remove payment methods from description
         description = re.sub(r"\b(pix|cartão|cartao|tranferencia|transferencia|boleto|dinheiro|debito|débito|credito|crédito)\b", "", description, flags=re.IGNORECASE).strip()
 
-        # Remove date mention if it's trailing like "dia 22/03", "para 25/02", "p/ 30/01"
-        description = re.sub(r"\s+(?:no dia|dia|para|pro|p/|em)?\s*\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?$", "", description, flags=re.IGNORECASE).strip()
+        # Remove installment/recurrence keywords from description
+        description = re.sub(r"\b(em|de)?\s*\d+\s*(?:x|vezes|parcelas)\b", "", description, flags=re.IGNORECASE).strip()
+        description = re.sub(r"\b(mensal|todo mes|todo mês|fixo|recorrente|assinatura)\b", "", description, flags=re.IGNORECASE).strip()
+
+        # Remove date mention if it's trailing like "dia 22/03", "para 25/02", "p/ 30/01", "primeira dia 13/03"
+        description = re.sub(r"\s+(?:no dia|dia|para|pro|p/|em|primeira|vencimento|venc|1ª|1a)?\s*(?:dia)?\s*\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?$", "", description, flags=re.IGNORECASE).strip()
 
         # Extra cleanup: double spaces and common connecting words at the end
         description = re.sub(r"\s+", " ", description)
-        description = re.sub(r"\s+(?:no|na|de|do|da|com|por|via|em)$", "", description, flags=re.IGNORECASE).strip()
+        description = re.sub(r"\s+(?:no|na|de|do|da|com|por|via|em|de apenas|primeira|1ª|1a)$", "", description, flags=re.IGNORECASE).strip()
 
         if not description:
             description = "Despesa via WhatsApp" if tx_type == "expense" else "Receita via WhatsApp"
@@ -290,7 +323,10 @@ class WhatsappAgent:
             category_id=category_id,
             payment_method=payment_method,
             status=status,
-            paid_at=tx_date if status == "paid" else None
+            paid_at=tx_date if status == "paid" else None,
+            installment_count=installment_count,
+            is_recurring=is_recurring,
+            recurrence_period=recurrence_period
         )
 
         crud.create_user_transaction(
@@ -304,10 +340,15 @@ class WhatsappAgent:
         type_emoji = "🔴" if tx_type == "expense" else "🟢"
         type_label = "Despesa" if tx_type == "expense" else "Receita"
         cat_label = f"📂 {category_name}" if category_id else f"📂 {category_name} _(sugerida)_"
-
+        
+        extra_info = ""
+        if installment_count > 1:
+            extra_info = f"\n🔢 *Parcelamento:* {installment_count}x de R$ {amount/installment_count:,.2f}"
+        elif is_recurring:
+            extra_info = f"\n🔄 *Recorrência:* Mensal"
         return (
-            f"{type_emoji} *{type_label} registrada!*\n\n"
-            f"💵 *Valor:* R$ {amount:,.2f}\n"
+            f"{type_emoji} *{type_label} registrada!*{extra_info}\n\n"
+            f"💵 *Valor Total:* R$ {amount:,.2f}\n"
             f"📝 *Descrição:* {description}\n"
             f"{cat_label}\n"
             f"📅 *Data:* {tx_date.strftime('%d/%m/%Y %H:%M')}\n\n"
