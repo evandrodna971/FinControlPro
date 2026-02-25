@@ -10,6 +10,17 @@ import { Eye, EyeOff, User, Mail, Lock, ShieldCheck } from 'lucide-react'
 import { Spinner } from '@/components/ui/spinner'
 import { motion, AnimatePresence } from 'framer-motion'
 import { SEO } from '@/components/SEO'
+import { TrendingUp } from 'lucide-react';
+
+const INTERACTIVE_FEATURES = [
+    { id: 1, top: '32%', left: '36%', label: 'Fluxo de Caixa', desc: 'Acompanhe suas entradas e saídas em tempo real' },
+    { id: 2, top: '44%', left: '22%', label: 'Distribuição', desc: 'Sua carteira dividida de forma inteligente' },
+    { id: 3, top: '54%', left: '36%', label: 'Desempenho', desc: 'Análise histórica comparativa de ativos' },
+    { id: 4, top: '43%', left: '51%', label: 'Crescimento', desc: 'Evolução patrimonial detalhada por período' },
+    { id: 5, top: '33%', left: '64%', label: 'Busca Inteligente', desc: 'Encontre qualquer transação instantaneamente' },
+    { id: 6, top: '44%', left: '76%', label: 'IA Preditiva', desc: 'Algoritmos que antecipam suas próximas contas' },
+    { id: 7, top: '53%', left: '64%', label: 'Planejamento', desc: 'Organize seu mês antes mesmo de começar' },
+];
 
 export default function Login() {
     const [mode, setMode] = useState<'signin' | 'signup'>('signin')
@@ -118,52 +129,49 @@ export default function Login() {
             <SEO title="Entrar" description="Acesse sua conta no FinControl Pro e gerencie suas finanças." />
 
             {/* Left Side: Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-8 lg:p-12 relative z-10 bg-slate-950">
-                <div className="w-full max-w-sm space-y-4 lg:space-y-6 animate-in fade-in slide-in-from-left-4 duration-500 py-8 lg:py-0">
-                    <div className="space-y-0.5">
-                        <Link to="/" className="inline-flex items-center gap-2.5 group mb-0.5">
-                            <div className="relative w-7 h-7 flex items-center justify-center bg-primary/10 rounded-lg overflow-hidden border border-primary/20">
-                                <img
-                                    src="/images/logo.png"
-                                    alt="FinControlPro"
-                                    className="w-full h-full object-contain p-1"
-                                    onError={(e) => {
-                                        e.currentTarget.src = "https://cdn-icons-png.flaticon.com/512/607/607156.png"
-                                    }}
-                                />
-                            </div>
-                            <span className="font-bold text-sm tracking-tight text-slate-200">FinControlPro</span>
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-8 lg:p-12 relative z-10 bg-white">
+                <div className="w-full max-w-sm space-y-3 animate-in fade-in slide-in-from-left-4 duration-500 py-8 lg:py-0">
+                    <div className="space-y-1 text-center">
+                        <Link to="/" className="inline-block group mb-0">
+                            <img
+                                src="/images/logo.png"
+                                alt="FinControlPro"
+                                className="w-40 h-auto object-contain transition-transform group-hover:scale-105 duration-300 mx-auto"
+                                onError={(e) => {
+                                    e.currentTarget.src = "https://cdn-icons-png.flaticon.com/512/607/607156.png"
+                                }}
+                            />
                         </Link>
-                        <h1 className="text-2xl font-bold tracking-tight">
+                        <h1 className="text-xl font-bold tracking-tight text-slate-900">
                             {mode === 'signin' ? 'Bem-vindo de volta' : 'Comece sua jornada'}
                         </h1>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-[11px] text-slate-500 font-medium">
                             {mode === 'signin'
-                                ? (step === 1 ? "Insira seu e-mail para acessar sua conta" : "Agora, insira sua senha")
-                                : "Crie sua conta em poucos segundos"}
+                                ? (step === 1 ? "Insira seu e-mail para acesso" : "Agora, insira sua senha")
+                                : "Crie sua conta em segundos"}
                         </p>
                     </div>
 
                     {/* Tabs Selector */}
-                    <div className="p-1 bg-slate-900 rounded-2xl flex relative overflow-hidden ring-1 ring-white/5">
+                    <div className="p-1 bg-slate-50 rounded-2xl flex relative overflow-hidden ring-1 ring-slate-200">
                         <div
-                            className={`absolute inset-y-1 w-[calc(50%-4px)] bg-primary rounded-xl shadow-md transition-all duration-300 ease-in-out ${mode === 'signin' ? 'left-1' : 'left-[calc(50%+2px)]'}`}
+                            className={`absolute inset-y-1 w-[calc(50%-4px)] bg-primary rounded-xl shadow-sm transition-all duration-300 ease-in-out ${mode === 'signin' ? 'left-1' : 'left-[calc(50%+2px)]'}`}
                         />
                         <button
                             onClick={() => setMode('signin')}
-                            className={`flex-1 py-2 text-sm font-bold relative z-10 transition-colors duration-300 ${mode === 'signin' ? 'text-primary-foreground' : 'text-slate-400 hover:text-slate-200'}`}
+                            className={`flex-1 py-2 text-sm font-bold relative z-10 transition-colors duration-300 ${mode === 'signin' ? 'text-white' : 'text-slate-500 hover:text-slate-800'}`}
                         >
                             Entrar
                         </button>
                         <button
                             onClick={() => setMode('signup')}
-                            className={`flex-1 py-2 text-sm font-bold relative z-10 transition-colors duration-300 ${mode === 'signup' ? 'text-primary-foreground' : 'text-slate-400 hover:text-slate-200'}`}
+                            className={`flex-1 py-2 text-sm font-bold relative z-10 transition-colors duration-300 ${mode === 'signup' ? 'text-white' : 'text-slate-500 hover:text-slate-800'}`}
                         >
                             Cadastrar
                         </button>
                     </div>
 
-                    <div className="flex flex-col min-h-[340px] sm:min-h-[380px]">
+                    <div className="flex flex-col min-h-[260px] sm:min-h-[280px]">
                         <AnimatePresence mode="wait">
                             <motion.form
                                 key={mode + step}
@@ -174,10 +182,10 @@ export default function Login() {
                                 onSubmit={handleSubmit}
                                 className="flex flex-col flex-1"
                             >
-                                <div className="space-y-5 flex-1 pt-2">
+                                <div className="space-y-3 flex-1 pt-1">
                                     {mode === 'signup' && (
                                         <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1">
-                                            <Label htmlFor="fullName" className="text-sm font-semibold text-slate-200">Nome Completo</Label>
+                                            <Label htmlFor="fullName" className="text-sm font-semibold text-slate-700">Nome Completo</Label>
                                             <div className="relative">
                                                 <Input
                                                     id="fullName"
@@ -186,15 +194,15 @@ export default function Login() {
                                                     onChange={(e) => setFullName(e.target.value)}
                                                     required
                                                     autoFocus={mode === 'signup'}
-                                                    className="h-10 bg-slate-900/50 border-white/5 focus-visible:ring-1 focus-visible:ring-primary/50 px-4 rounded-xl transition-all placeholder:text-slate-600"
+                                                    className="h-10 bg-slate-50 border-slate-200 focus-visible:ring-1 focus-visible:ring-primary/50 px-4 rounded-xl transition-all placeholder:text-slate-400 text-slate-900"
                                                 />
-                                                <User className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                                                <User className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
                                             </div>
                                         </div>
                                     )}
 
                                     <div className="space-y-1.5">
-                                        <Label htmlFor="email" className="text-sm font-semibold text-slate-200">E-mail</Label>
+                                        <Label htmlFor="email" className="text-sm font-semibold text-slate-700">E-mail</Label>
                                         <div className="relative">
                                             <Input
                                                 id="email"
@@ -204,22 +212,22 @@ export default function Login() {
                                                 onChange={handleEmailChange}
                                                 required
                                                 autoFocus={mode === 'signin'}
-                                                className={`h-10 bg-slate-900/50 border-white/5 focus-visible:ring-1 focus-visible:ring-primary/50 px-4 rounded-xl transition-all placeholder:text-slate-600 ${emailError ? "ring-1 ring-destructive" : ""}`}
+                                                className={`h-10 bg-slate-50 border-slate-200 focus-visible:ring-1 focus-visible:ring-primary/50 px-4 rounded-xl transition-all placeholder:text-slate-400 text-slate-900 ${emailError ? "ring-1 ring-destructive" : ""}`}
                                             />
                                             <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                                <Mail className="text-slate-500 w-4 h-4" />
+                                                <Mail className="text-slate-400 w-4 h-4" />
                                             </div>
                                         </div>
                                         {emailError && <p className="text-[10px] text-destructive font-medium ml-1">{emailError}</p>}
                                     </div>
 
                                     {(mode === 'signup' || mode === 'signin') && (
-                                        <div className="space-y-4 animate-in fade-in zoom-in-95 duration-300">
-                                            <div className="space-y-1.5">
+                                        <div className="space-y-3 animate-in fade-in zoom-in-95 duration-300">
+                                            <div className="space-y-1">
                                                 <div className="flex items-center justify-between">
-                                                    <Label htmlFor="password" title="Senha" className="text-slate-200">Senha</Label>
+                                                    <Label htmlFor="password" title="Senha" className="text-slate-700">Senha</Label>
                                                     {mode === 'signin' && (
-                                                        <Link to="/forgot-password" tabIndex={-1} className="text-[10px] text-primary font-medium hover:underline">
+                                                        <Link to="/forgot-password" tabIndex={-1} className="text-[10px] text-primary font-bold hover:underline">
                                                             Esqueceu a senha?
                                                         </Link>
                                                     )}
@@ -231,24 +239,24 @@ export default function Login() {
                                                         value={password}
                                                         onChange={(e) => setPassword(e.target.value)}
                                                         required
-                                                        className="h-10 bg-slate-900/50 border-white/5 focus-visible:ring-1 focus-visible:ring-primary/50 px-4 rounded-xl transition-all pr-12 placeholder:text-slate-600"
+                                                        className="h-10 bg-slate-50 border-slate-200 focus-visible:ring-1 focus-visible:ring-primary/50 px-4 rounded-xl transition-all pr-12 placeholder:text-slate-400 text-slate-900"
                                                     />
                                                     <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
                                                         <button
                                                             type="button"
                                                             onClick={() => setShowPassword(!showPassword)}
-                                                            className="text-muted-foreground hover:text-foreground transition-colors"
+                                                            className="text-slate-400 hover:text-slate-600 transition-colors"
                                                         >
                                                             {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                                                         </button>
-                                                        <Lock className="text-slate-500 w-4 h-4" />
+                                                        <Lock className="text-slate-400 w-4 h-4" />
                                                     </div>
                                                 </div>
                                             </div>
 
                                             {mode === 'signup' && (
                                                 <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1">
-                                                    <Label htmlFor="confirmPassword" className="text-sm font-semibold text-slate-200">Confirmar Senha</Label>
+                                                    <Label htmlFor="confirmPassword" className="text-sm font-semibold text-slate-700">Confirmar Senha</Label>
                                                     <div className="relative">
                                                         <Input
                                                             id="confirmPassword"
@@ -256,9 +264,9 @@ export default function Login() {
                                                             value={confirmPassword}
                                                             onChange={(e) => setConfirmPassword(e.target.value)}
                                                             required
-                                                            className="h-10 bg-slate-900/50 border-white/5 focus-visible:ring-1 focus-visible:ring-primary/50 px-4 rounded-xl transition-all placeholder:text-slate-600"
+                                                            className="h-10 bg-slate-50 border-slate-200 focus-visible:ring-1 focus-visible:ring-primary/50 px-4 rounded-xl transition-all placeholder:text-slate-400 text-slate-900"
                                                         />
-                                                        <ShieldCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                                                        <ShieldCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
                                                     </div>
                                                 </div>
                                             )}
@@ -271,10 +279,10 @@ export default function Login() {
                                                             id="rememberMe"
                                                             checked={rememberMe}
                                                             onChange={(e) => setRememberMe(e.target.checked)}
-                                                            className="peer h-3.5 w-3.5 shrink-0 rounded-sm border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 checked:bg-primary checked:text-primary-foreground"
+                                                            className="peer h-3.5 w-3.5 shrink-0 rounded-sm border border-slate-300 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 checked:bg-primary checked:text-primary-foreground"
                                                         />
                                                     </div>
-                                                    <span className="text-xs text-slate-400 group-hover:text-slate-100 transition-colors">
+                                                    <span className="text-xs text-slate-600 group-hover:text-slate-900 transition-colors font-medium">
                                                         Lembrar meus dados
                                                     </span>
                                                 </label>
@@ -283,7 +291,7 @@ export default function Login() {
                                     )}
                                 </div>
 
-                                <div className="mt-8 space-y-4">
+                                <div className="mt-4 space-y-4">
                                     {error && (
                                         <div className="p-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs font-medium animate-in shake-1">
                                             {error}
@@ -309,9 +317,10 @@ export default function Login() {
                         </AnimatePresence>
                     </div>
 
-                    <div className="pt-4 border-t text-center space-y-2">
-                        <p className="text-[10px] text-muted-foreground px-4">
-                            Ao continuar, você concorda com nossos Termos de Serviço e Política de Privacidade.
+                    <div className="pt-2 border-t border-slate-100 text-center">
+                        <p className="text-[9px] text-slate-500 px-4 leading-relaxed font-medium">
+                            Ao continuar, você concorda com nossos <br />
+                            <span className="text-primary hover:underline cursor-pointer font-bold">Termos de Serviço</span> e <span className="text-primary hover:underline cursor-pointer font-bold">Política de Privacidade</span>.
                         </p>
                     </div>
                 </div>
@@ -327,40 +336,53 @@ export default function Login() {
                     </svg>
                 </div>
 
-                {/* Main Content Area */}
-                <div className="relative z-10 w-full h-full flex flex-col items-center justify-center p-8 text-white">
-                    <div className="relative w-full max-w-md aspect-square mb-8 animate-in fade-in zoom-in-95 duration-1000">
-                        {/* The illustration requested */}
-                        <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/30 to-teal-500/30 blur-3xl opacity-50 rounded-full" />
+                {/* Main Content Area - Full Screen Image */}
+                <div className="absolute inset-0 z-10 w-full h-full p-0">
+                    <img
+                        src="/images/login_background_new.png"
+                        alt="Financial Visualization"
+                        className="w-full h-full object-cover transition-transform duration-[10s] hover:scale-110 ease-out"
+                        onError={(e) => {
+                            e.currentTarget.src = "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=2070"
+                        }}
+                    />
 
-                        {/* Image Placeholder with high aesthetic styling */}
-                        <div className="relative w-full h-full rounded-3xl overflow-hidden border border-white/10 shadow-2xl backdrop-blur-sm bg-white/5 flex items-center justify-center">
-                            <img
-                                src="/images/login_background_new.png"
-                                alt="Financial Visualization"
-                                className="w-full h-full object-cover opacity-90"
-                                onError={(e) => {
-                                    e.currentTarget.src = "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=2070"
-                                }}
-                            />
-                            {/* Overlaying labels or floating elements */}
-                            <div className="absolute top-6 left-6 p-3 rounded-2xl bg-slate-950/40 backdrop-blur-md border border-white/10 shadow-xl">
-                                <TrendingUp className="w-5 h-5 text-teal-400 mb-1" />
-                                <div className="text-[10px] font-bold text-white/50 tracking-widest uppercase">Análise</div>
-                                <div className="text-lg font-bold">Monitoramento</div>
-                            </div>
-                            <div className="absolute bottom-6 right-6 p-3 rounded-2xl bg-slate-950/40 backdrop-blur-md border border-white/10 text-right shadow-xl">
-                                <div className="text-[10px] font-bold text-white/50 tracking-widest uppercase">Status</div>
-                                <div className="text-lg font-bold">100% Protegido</div>
+                    {/* Overlay Gradient for legibility */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60" />
+
+                    {/* Interactive Hotspots Over the Imagery */}
+                    {INTERACTIVE_FEATURES.map((feature) => (
+                        <div
+                            key={feature.id}
+                            className="absolute z-20 group -translate-x-1/2 -translate-y-1/2"
+                            style={{ top: feature.top, left: feature.left }}
+                        >
+                            {/* Larger Invisible Trigger Area centered on each icon drawing */}
+                            <div className="relative w-32 h-32 flex items-center justify-center cursor-pointer">
+
+                                {/* Tooltip Balloon */}
+                                <div className="absolute bottom-1/2 left-1/2 -translate-x-1/2 mb-8 w-48 p-3 rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-white/10 shadow-2xl opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 z-30 text-center">
+                                    <div className="font-bold text-xs text-white mb-1 uppercase tracking-wider">{feature.label}</div>
+                                    <div className="text-[10px] text-white/60 leading-tight font-medium">{feature.desc}</div>
+                                    {/* Triangle Arrow */}
+                                    <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-slate-900/95" />
+                                </div>
                             </div>
                         </div>
+                    ))}
+                    {/* Main Branding Legend - Bottom Right */}
+                    <div className="absolute bottom-6 right-6 p-4 rounded-2xl bg-slate-950/40 backdrop-blur-md border border-white/10 text-right shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-700 z-10">
+                        <TrendingUp className="w-6 h-6 text-teal-400 mb-2 ml-auto" />
+                        <div className="text-[10px] font-bold text-white/50 tracking-widest uppercase mb-1 text-right">Análise</div>
+                        <div className="text-xl font-bold text-white">Monitoramento</div>
                     </div>
 
-                    <div className="max-w-md text-center space-y-2">
-                        <h2 className="text-3xl font-extrabold leading-tight tracking-tighter">
-                            Controle com inteligência.
+                    {/* Branding text as overlay - TOP CENTERED (Single line) */}
+                    <div className="absolute top-12 inset-x-0 mx-auto max-w-2xl space-y-2 text-center animate-in fade-in zoom-in-95 duration-1000 px-4">
+                        <h2 className="text-4xl font-extrabold leading-tight tracking-widest text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)] whitespace-nowrap uppercase">
+                            Controle com <span className="text-blue-400">inteligência</span>
                         </h2>
-                        <p className="text-base text-blue-100/60 leading-relaxed font-medium">
+                        <p className="text-lg text-blue-50 font-medium opacity-90 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] whitespace-nowrap">
                             Visualize seus dados de forma clara e tome decisões melhores.
                         </p>
                     </div>
@@ -374,22 +396,3 @@ export default function Login() {
     )
 }
 
-function TrendingUp(props: any) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-            <polyline points="16 7 22 7 22 13" />
-        </svg>
-    )
-}
