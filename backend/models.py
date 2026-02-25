@@ -35,6 +35,7 @@ class Workspace(Base):
     bills = relationship("Bill", back_populates="workspace")
     joint_goals = relationship("JointGoal", back_populates="workspace")
     settings = relationship("WorkspaceSettings", back_populates="workspace", uselist=False)
+    monthly_goals = relationship("MonthlyFinancialGoal", back_populates="workspace")
     # cost_centers = relationship("CostCenter", back_populates="workspace") # REMOVED
 
 class UserWorkspace(Base):
@@ -284,3 +285,15 @@ class PriceAlert(Base):
     # Relationships
     asset = relationship("InvestmentAsset", back_populates="alerts")
     user = relationship("User")
+
+class MonthlyFinancialGoal(Base):
+    __tablename__ = "monthly_financial_goals"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    workspace_id = Column(Integer, ForeignKey("workspaces.id"))
+    month = Column(Integer) # 1-12
+    year = Column(Integer)
+    target_amount = Column(Float)
+    created_at = Column(DateTime, default=datetime.now)
+
+    workspace = relationship("Workspace", back_populates="monthly_goals")

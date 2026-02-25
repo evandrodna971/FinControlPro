@@ -736,6 +736,43 @@ def update_workspace_settings(db: Session, workspace_id: int, approval_threshold
     db.refresh(settings)
     return settings
 
+def get_monthly_savings_goal(db: Session, workspace_id: int, month: int, year: int):
+    # Try monthly first
+    monthly = db.query(models.MonthlyFinancialGoal).filter(
+        models.MonthlyFinancialGoal.workspace_id == workspace_id,
+        models.MonthlyFinancialGoal.month == month,
+        models.MonthlyFinancialGoal.year == year
+    ).first()
+    
+    if monthly:
+        return monthly.target_amount
+    
+    # Fallback to global
+    settings = get_workspace_settings(db, workspace_id)
+    return settings.monthly_savings_goal
+
+def update_monthly_savings_goal(db: Session, workspace_id: int, month: int, year: int, amount: float):
+    db_goal = db.query(models.MonthlyFinancialGoal).filter(
+        models.MonthlyFinancialGoal.workspace_id == workspace_id,
+        models.MonthlyFinancialGoal.month == month,
+        models.MonthlyFinancialGoal.year == year
+    ).first()
+    
+    if db_goal:
+        db_goal.target_amount = amount
+    else:
+        db_goal = models.MonthlyFinancialGoal(
+            workspace_id=workspace_id,
+            month=month,
+            year=year,
+            target_amount=amount
+        )
+        db.add(db_goal)
+    
+    db.commit()
+    db.refresh(db_goal)
+    return db_goal
+
 # ==================== JOINT GOALS ====================
 
 def create_joint_goal(db: Session, title: str, target_amount: float, workspace_id: int, description: Optional[str] = None, deadline: Optional[datetime] = None):

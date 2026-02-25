@@ -1,25 +1,29 @@
 import { useState, useEffect } from 'react'
+import { api } from '@/lib/api'
 import { useAuthStore } from '@/store/useAuthStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { Eye, EyeOff, ArrowRight, Check } from 'lucide-react'
+import { Eye, EyeOff, User, Mail, Lock, ShieldCheck } from 'lucide-react'
 import { Spinner } from '@/components/ui/spinner'
+import { motion, AnimatePresence } from 'framer-motion'
 import { SEO } from '@/components/SEO'
 
 export default function Login() {
+    const [mode, setMode] = useState<'signin' | 'signup'>('signin')
+    const [fullName, setFullName] = useState('')
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [confirmPassword, setConfirmPassword] = useState('')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
-    const [isCheckingEmail, setIsCheckingEmail] = useState(false)
     const [step, setStep] = useState<1 | 2>(1) // 1: Email, 2: Password
     const [rememberMe, setRememberMe] = useState(false)
     const [showPassword, setShowPassword] = useState(false)
     const [emailError, setEmailError] = useState('')
-    const { login, checkEmail } = useAuthStore()
+    const { login } = useAuthStore()
     const navigate = useNavigate()
 
     const validateEmail = (email: string) => {
@@ -32,11 +36,6 @@ export default function Login() {
     const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value
         setEmail(val)
-        if (step === 2) {
-            // If user changes email after verified, reset to step 1
-            setStep(1)
-            setPassword('')
-        }
         setEmailError(validateEmail(val))
     }
 
@@ -52,34 +51,6 @@ export default function Login() {
         }
     }, [])
 
-    const handleEmailCheck = async () => {
-        const emailErr = validateEmail(email)
-        if (emailErr) {
-            setEmailError(emailErr)
-            toast.error(emailErr)
-            return
-        }
-
-        setError('')
-        setIsCheckingEmail(true)
-        try {
-            const result = await checkEmail(email)
-            if (result.exists) {
-                setStep(2)
-                toast.success(`Olá ${result.message ? '' : 'novamente'}!`)
-            } else {
-                toast.info("E-mail não encontrado. Redirecionando para cadastro...")
-                setTimeout(() => {
-                    navigate('/register', { state: { email } })
-                }, 1500)
-            }
-        } catch (err: any) {
-            console.error(err)
-            toast.error("Erro ao verificar e-mail. Tente novamente.")
-        } finally {
-            setIsCheckingEmail(false)
-        }
-    }
 
     const handleLogin = async () => {
         setError('')
@@ -97,148 +68,250 @@ export default function Login() {
         }
     }
 
+    const handleRegister = async () => {
+        if (!fullName) {
+            toast.error('Nome completo é obrigatório')
+            return
+        }
+        if (password !== confirmPassword) {
+            toast.error('As senhas não coincidem')
+            return
+        }
+        if (password.length < 8) {
+            toast.error('A senha deve ter pelo menos 8 caracteres')
+            return
+        }
+
+        setError('')
+        setLoading(true)
+        try {
+            await api.post('/register', {
+                email,
+                password,
+                full_name: fullName
+            })
+            toast.success('Conta criada com sucesso! Faça login para continuar.')
+            setMode('signin')
+            setStep(2)
+            setPassword('')
+            setConfirmPassword('')
+        } catch (err: any) {
+            const detail = err.response?.data?.detail || 'Erro ao criar conta. Tente novamente.'
+            setError(detail)
+            toast.error(detail)
+        } finally {
+            setLoading(false)
+        }
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (step === 1) {
-            await handleEmailCheck()
-        } else {
+        if (mode === 'signin') {
             await handleLogin()
+        } else {
+            await handleRegister()
         }
     }
 
     return (
-        <div className="min-h-screen flex bg-background overflow-hidden">
+        <div className="min-h-screen lg:h-screen lg:max-h-screen flex bg-slate-950 overflow-y-auto lg:overflow-hidden relative text-slate-100">
             <SEO title="Entrar" description="Acesse sua conta no FinControl Pro e gerencie suas finanças." />
 
             {/* Left Side: Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12 relative z-10 bg-background">
-                <div className="w-full max-w-sm space-y-8 animate-in fade-in slide-in-from-left-4 duration-500">
-                    <div className="space-y-2">
-                        <Link to="/" className="inline-flex items-center gap-2 group mb-4">
-                            <div className="bg-primary p-1.5 rounded-lg">
-                                <ArrowRight className="w-5 h-5 text-primary-foreground rotate-180" />
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-8 lg:p-12 relative z-10 bg-slate-950">
+                <div className="w-full max-w-sm space-y-4 lg:space-y-6 animate-in fade-in slide-in-from-left-4 duration-500 py-8 lg:py-0">
+                    <div className="space-y-0.5">
+                        <Link to="/" className="inline-flex items-center gap-2.5 group mb-0.5">
+                            <div className="relative w-7 h-7 flex items-center justify-center bg-primary/10 rounded-lg overflow-hidden border border-primary/20">
+                                <img
+                                    src="/images/logo.png"
+                                    alt="FinControlPro"
+                                    className="w-full h-full object-contain p-1"
+                                    onError={(e) => {
+                                        e.currentTarget.src = "https://cdn-icons-png.flaticon.com/512/607/607156.png"
+                                    }}
+                                />
                             </div>
-                            <span className="font-bold text-xl tracking-tight">FinControlPro</span>
+                            <span className="font-bold text-sm tracking-tight text-slate-200">FinControlPro</span>
                         </Link>
-                        <h1 className="text-3xl font-bold tracking-tight">Bem-vindo de volta</h1>
-                        <p className="text-muted-foreground">
-                            {step === 1
-                                ? "Insira seu e-mail para acessar sua conta"
-                                : "A pessoa por trás do e-mail foi identificada. Agora, a senha."}
+                        <h1 className="text-2xl font-bold tracking-tight">
+                            {mode === 'signin' ? 'Bem-vindo de volta' : 'Comece sua jornada'}
+                        </h1>
+                        <p className="text-sm text-muted-foreground">
+                            {mode === 'signin'
+                                ? (step === 1 ? "Insira seu e-mail para acessar sua conta" : "Agora, insira sua senha")
+                                : "Crie sua conta em poucos segundos"}
                         </p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="email" className="text-sm font-semibold">E-mail</Label>
-                                <div className="relative">
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        placeholder="seu@email.com"
-                                        value={email}
-                                        onChange={handleEmailChange}
-                                        required
-                                        disabled={step === 2 && loading}
-                                        className={`h-12 bg-muted/50 border-none focus-visible:ring-2 px-4 rounded-xl transition-all ${emailError ? "ring-2 ring-destructive" : ""}`}
-                                    />
-                                    {step === 2 && (
-                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 bg-background rounded-full p-0.5 shadow-sm">
-                                            <Check size={16} />
+                    {/* Tabs Selector */}
+                    <div className="p-1 bg-slate-900 rounded-2xl flex relative overflow-hidden ring-1 ring-white/5">
+                        <div
+                            className={`absolute inset-y-1 w-[calc(50%-4px)] bg-primary rounded-xl shadow-md transition-all duration-300 ease-in-out ${mode === 'signin' ? 'left-1' : 'left-[calc(50%+2px)]'}`}
+                        />
+                        <button
+                            onClick={() => setMode('signin')}
+                            className={`flex-1 py-2 text-sm font-bold relative z-10 transition-colors duration-300 ${mode === 'signin' ? 'text-primary-foreground' : 'text-slate-400 hover:text-slate-200'}`}
+                        >
+                            Entrar
+                        </button>
+                        <button
+                            onClick={() => setMode('signup')}
+                            className={`flex-1 py-2 text-sm font-bold relative z-10 transition-colors duration-300 ${mode === 'signup' ? 'text-primary-foreground' : 'text-slate-400 hover:text-slate-200'}`}
+                        >
+                            Cadastrar
+                        </button>
+                    </div>
+
+                    <div className="flex flex-col min-h-[340px] sm:min-h-[380px]">
+                        <AnimatePresence mode="wait">
+                            <motion.form
+                                key={mode + step}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                transition={{ duration: 0.2 }}
+                                onSubmit={handleSubmit}
+                                className="flex flex-col flex-1"
+                            >
+                                <div className="space-y-5 flex-1 pt-2">
+                                    {mode === 'signup' && (
+                                        <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1">
+                                            <Label htmlFor="fullName" className="text-sm font-semibold text-slate-200">Nome Completo</Label>
+                                            <div className="relative">
+                                                <Input
+                                                    id="fullName"
+                                                    placeholder="Seu nome"
+                                                    value={fullName}
+                                                    onChange={(e) => setFullName(e.target.value)}
+                                                    required
+                                                    autoFocus={mode === 'signup'}
+                                                    className="h-10 bg-slate-900/50 border-white/5 focus-visible:ring-1 focus-visible:ring-primary/50 px-4 rounded-xl transition-all placeholder:text-slate-600"
+                                                />
+                                                <User className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="email" className="text-sm font-semibold text-slate-200">E-mail</Label>
+                                        <div className="relative">
+                                            <Input
+                                                id="email"
+                                                type="email"
+                                                placeholder="seu@email.com"
+                                                value={email}
+                                                onChange={handleEmailChange}
+                                                required
+                                                autoFocus={mode === 'signin'}
+                                                className={`h-10 bg-slate-900/50 border-white/5 focus-visible:ring-1 focus-visible:ring-primary/50 px-4 rounded-xl transition-all placeholder:text-slate-600 ${emailError ? "ring-1 ring-destructive" : ""}`}
+                                            />
+                                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                                <Mail className="text-slate-500 w-4 h-4" />
+                                            </div>
+                                        </div>
+                                        {emailError && <p className="text-[10px] text-destructive font-medium ml-1">{emailError}</p>}
+                                    </div>
+
+                                    {(mode === 'signup' || mode === 'signin') && (
+                                        <div className="space-y-4 animate-in fade-in zoom-in-95 duration-300">
+                                            <div className="space-y-1.5">
+                                                <div className="flex items-center justify-between">
+                                                    <Label htmlFor="password" title="Senha" className="text-slate-200">Senha</Label>
+                                                    {mode === 'signin' && (
+                                                        <Link to="/forgot-password" tabIndex={-1} className="text-[10px] text-primary font-medium hover:underline">
+                                                            Esqueceu a senha?
+                                                        </Link>
+                                                    )}
+                                                </div>
+                                                <div className="relative">
+                                                    <Input
+                                                        id="password"
+                                                        type={showPassword ? "text" : "password"}
+                                                        value={password}
+                                                        onChange={(e) => setPassword(e.target.value)}
+                                                        required
+                                                        className="h-10 bg-slate-900/50 border-white/5 focus-visible:ring-1 focus-visible:ring-primary/50 px-4 rounded-xl transition-all pr-12 placeholder:text-slate-600"
+                                                    />
+                                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setShowPassword(!showPassword)}
+                                                            className="text-muted-foreground hover:text-foreground transition-colors"
+                                                        >
+                                                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                        </button>
+                                                        <Lock className="text-slate-500 w-4 h-4" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {mode === 'signup' && (
+                                                <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1">
+                                                    <Label htmlFor="confirmPassword" className="text-sm font-semibold text-slate-200">Confirmar Senha</Label>
+                                                    <div className="relative">
+                                                        <Input
+                                                            id="confirmPassword"
+                                                            type={showPassword ? "text" : "password"}
+                                                            value={confirmPassword}
+                                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                                            required
+                                                            className="h-10 bg-slate-900/50 border-white/5 focus-visible:ring-1 focus-visible:ring-primary/50 px-4 rounded-xl transition-all placeholder:text-slate-600"
+                                                        />
+                                                        <ShieldCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {mode === 'signin' && (
+                                                <label className="flex items-center gap-2 cursor-pointer group">
+                                                    <div className="relative flex items-center">
+                                                        <input
+                                                            type="checkbox"
+                                                            id="rememberMe"
+                                                            checked={rememberMe}
+                                                            onChange={(e) => setRememberMe(e.target.checked)}
+                                                            className="peer h-3.5 w-3.5 shrink-0 rounded-sm border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 checked:bg-primary checked:text-primary-foreground"
+                                                        />
+                                                    </div>
+                                                    <span className="text-xs text-slate-400 group-hover:text-slate-100 transition-colors">
+                                                        Lembrar meus dados
+                                                    </span>
+                                                </label>
+                                            )}
                                         </div>
                                     )}
                                 </div>
-                                {emailError && <p className="text-xs text-destructive font-medium ml-1">{emailError}</p>}
-                            </div>
 
-                            {step === 2 && (
-                                <div className="space-y-4 animate-in fade-in zoom-in-95 duration-300">
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <Label htmlFor="password">Senha</Label>
-                                            <Link to="/forgot-password" tabIndex={-1} className="text-xs text-primary font-medium hover:underline">
-                                                Esqueceu a senha?
-                                            </Link>
+                                <div className="mt-8 space-y-4">
+                                    {error && (
+                                        <div className="p-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs font-medium animate-in shake-1">
+                                            {error}
                                         </div>
-                                        <div className="relative">
-                                            <Input
-                                                id="password"
-                                                type={showPassword ? "text" : "password"}
-                                                value={password}
-                                                onChange={(e) => setPassword(e.target.value)}
-                                                required
-                                                autoFocus
-                                                className="h-12 bg-muted/50 border-none focus-visible:ring-2 px-4 rounded-xl transition-all pr-12"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowPassword(!showPassword)}
-                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                                            >
-                                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                            </button>
-                                        </div>
-                                    </div>
+                                    )}
 
-                                    <label className="flex items-center gap-2 cursor-pointer group">
-                                        <div className="relative flex items-center">
-                                            <input
-                                                type="checkbox"
-                                                id="rememberMe"
-                                                checked={rememberMe}
-                                                onChange={(e) => setRememberMe(e.target.checked)}
-                                                className="peer h-4 w-4 shrink-0 rounded-sm border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 checked:bg-primary checked:text-primary-foreground"
-                                            />
-                                        </div>
-                                        <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-                                            Lembrar meus dados
-                                        </span>
-                                    </label>
+                                    <Button
+                                        type="submit"
+                                        className="w-full h-11 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all uppercase tracking-wide"
+                                        disabled={loading}
+                                    >
+                                        {loading ? (
+                                            <>
+                                                <Spinner className="mr-2 h-4 w-4" />
+                                                {mode === 'signin' ? 'Validando...' : 'Criando Conta...'}
+                                            </>
+                                        ) : (
+                                            mode === 'signin' ? "Acessar Painel" : "Criar Minha Conta"
+                                        )}
+                                    </Button>
                                 </div>
-                            )}
-                        </div>
+                            </motion.form>
+                        </AnimatePresence>
+                    </div>
 
-                        {error && (
-                            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm font-medium animate-in shake-1">
-                                {error}
-                            </div>
-                        )}
-
-                        <Button
-                            type="submit"
-                            className="w-full h-12 rounded-xl text-md font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all uppercase tracking-wide"
-                            disabled={loading || isCheckingEmail}
-                        >
-                            {step === 1 ? (
-                                isCheckingEmail ? (
-                                    <>
-                                        <Spinner className="mr-2 h-4 w-4" />
-                                        Validando...
-                                    </>
-                                ) : (
-                                    <>
-                                        Próximo passo
-                                        <ArrowRight className="ml-2 h-4 w-4" />
-                                    </>
-                                )
-                            ) : (
-                                loading ? (
-                                    <>
-                                        <Spinner className="mr-2 h-4 w-4" />
-                                        Entrando...
-                                    </>
-                                ) : "Acessar Painel"
-                            )}
-                        </Button>
-                    </form>
-
-                    <div className="pt-8 border-t text-center space-y-4">
-                        <p className="text-sm text-muted-foreground">
-                            Novo por aqui?{" "}
-                            <Link to="/register" className="text-primary font-bold hover:underline">
-                                Crie sua conta gratuita
-                            </Link>
+                    <div className="pt-4 border-t text-center space-y-2">
+                        <p className="text-[10px] text-muted-foreground px-4">
+                            Ao continuar, você concorda com nossos Termos de Serviço e Política de Privacidade.
                         </p>
                     </div>
                 </div>
@@ -255,37 +328,40 @@ export default function Login() {
                 </div>
 
                 {/* Main Content Area */}
-                <div className="relative z-10 w-full h-full flex flex-col items-center justify-center p-12 text-white">
-                    <div className="relative w-full max-w-lg aspect-square mb-12 animate-in fade-in zoom-in-95 duration-1000">
-                        {/* The illustration requested (Image 1 replica style) */}
-                        <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/30 to-purple-500/30 blur-3xl opacity-50 rounded-full" />
+                <div className="relative z-10 w-full h-full flex flex-col items-center justify-center p-8 text-white">
+                    <div className="relative w-full max-w-md aspect-square mb-8 animate-in fade-in zoom-in-95 duration-1000">
+                        {/* The illustration requested */}
+                        <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/30 to-teal-500/30 blur-3xl opacity-50 rounded-full" />
 
                         {/* Image Placeholder with high aesthetic styling */}
-                        <div className="relative w-full h-full rounded-2xl overflow-hidden border border-white/10 shadow-2xl backdrop-blur-sm bg-white/5 flex items-center justify-center">
+                        <div className="relative w-full h-full rounded-3xl overflow-hidden border border-white/10 shadow-2xl backdrop-blur-sm bg-white/5 flex items-center justify-center">
                             <img
-                                src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=2070"
+                                src="/images/login_background_new.png"
                                 alt="Financial Visualization"
-                                className="w-full h-full object-cover opacity-80"
+                                className="w-full h-full object-cover opacity-90"
+                                onError={(e) => {
+                                    e.currentTarget.src = "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=2070"
+                                }}
                             />
-                            {/* Overlaying labels or floating elements to mirror the mockup's complexity */}
-                            <div className="absolute top-8 left-8 p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/20">
-                                <TrendingUp className="w-6 h-6 text-blue-400 mb-2" />
-                                <div className="text-xs font-medium text-white/70 tracking-widest uppercase">Investimentos</div>
-                                <div className="text-xl font-bold">+24.5%</div>
+                            {/* Overlaying labels or floating elements */}
+                            <div className="absolute top-6 left-6 p-3 rounded-2xl bg-slate-950/40 backdrop-blur-md border border-white/10 shadow-xl">
+                                <TrendingUp className="w-5 h-5 text-teal-400 mb-1" />
+                                <div className="text-[10px] font-bold text-white/50 tracking-widest uppercase">Análise</div>
+                                <div className="text-lg font-bold">Monitoramento</div>
                             </div>
-                            <div className="absolute bottom-8 right-8 p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-right">
-                                <div className="text-xs font-medium text-white/70 tracking-widest uppercase">Segurança</div>
-                                <div className="text-xl font-bold">Proteção Ativa</div>
+                            <div className="absolute bottom-6 right-6 p-3 rounded-2xl bg-slate-950/40 backdrop-blur-md border border-white/10 text-right shadow-xl">
+                                <div className="text-[10px] font-bold text-white/50 tracking-widest uppercase">Status</div>
+                                <div className="text-lg font-bold">100% Protegido</div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="max-w-md text-center space-y-4">
-                        <h2 className="text-4xl font-extrabold leading-tight tracking-tighter">
-                            Controle suas finanças com inteligência artificial.
+                    <div className="max-w-md text-center space-y-2">
+                        <h2 className="text-3xl font-extrabold leading-tight tracking-tighter">
+                            Controle com inteligência.
                         </h2>
-                        <p className="text-lg text-blue-100/60 leading-relaxed font-medium">
-                            Organize gastos, planeje metas e invista com segurança. Tudo em um só lugar.
+                        <p className="text-base text-blue-100/60 leading-relaxed font-medium">
+                            Visualize seus dados de forma clara e tome decisões melhores.
                         </p>
                     </div>
                 </div>

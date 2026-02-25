@@ -8,18 +8,23 @@ import { ArrowLeft, Save, Plus, Trash2, Briefcase } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useWorkspaceStore } from '@/store/useWorkspaceStore'
+import { useMonth } from '@/context/MonthContext'
 
 export default function WorkspaceSettings() {
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [monthlySavingsGoal, setMonthlySavingsGoal] = useState(5000.0)
+    const [saveOnlyThisMonth, setSaveOnlyThisMonth] = useState(false)
     const [newWorkspaceName, setNewWorkspaceName] = useState('')
     const { activeWorkspace, workspaces, setActiveWorkspace, setWorkspaces } = useWorkspaceStore()
+    const { selectedMonth, selectedYear } = useMonth()
+
+    const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]
 
     useEffect(() => {
         fetchSettings()
         fetchWorkspaces()
-    }, [])
+    }, [selectedMonth, selectedYear])
 
     const fetchWorkspaces = async () => {
         try {
@@ -32,7 +37,9 @@ export default function WorkspaceSettings() {
 
     const fetchSettings = async () => {
         try {
-            const { data } = await api.get('/couples/settings')
+            const { data } = await api.get('/couples/settings', {
+                params: { month: selectedMonth, year: selectedYear }
+            })
             if (data.monthly_savings_goal) {
                 setMonthlySavingsGoal(data.monthly_savings_goal)
             }
@@ -47,9 +54,19 @@ export default function WorkspaceSettings() {
     const handleSave = async () => {
         setSaving(true)
         try {
-            await api.put('/couples/settings', {
-                monthly_savings_goal: monthlySavingsGoal
-            })
+            if (saveOnlyThisMonth) {
+                await api.put('/couples/settings/monthly', null, {
+                    params: {
+                        amount: monthlySavingsGoal,
+                        month: selectedMonth,
+                        year: selectedYear
+                    }
+                })
+            } else {
+                await api.put('/couples/settings', {
+                    monthly_savings_goal: monthlySavingsGoal
+                })
+            }
             toast.success('Configurações salvas com sucesso!')
         } catch (error) {
             console.error('Error saving settings:', error)
@@ -161,8 +178,8 @@ export default function WorkspaceSettings() {
                                     <div
                                         key={ws.id}
                                         className={`flex items-center justify-between p-3 rounded-lg border ${activeWorkspace?.id === ws.id
-                                                ? 'border-primary bg-primary/5'
-                                                : 'border-border'
+                                            ? 'border-primary bg-primary/5'
+                                            : 'border-border'
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">
@@ -222,9 +239,24 @@ export default function WorkspaceSettings() {
                                 onChange={(e) => setMonthlySavingsGoal(parseFloat(e.target.value))}
                                 placeholder="5000.00"
                             />
-                            <p className="text-sm text-muted-foreground">
-                                Defina sua meta de economia mensal para acompanhar no dashboard
-                            </p>
+
+                            <div className="flex items-start space-x-3 space-y-0 rounded-md border p-4 bg-muted/10">
+                                <input
+                                    type="checkbox"
+                                    id="saveOnlyThisMonth"
+                                    checked={saveOnlyThisMonth}
+                                    onChange={(e) => setSaveOnlyThisMonth(e.target.checked)}
+                                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary mt-1"
+                                />
+                                <div className="space-y-1 leading-none">
+                                    <Label htmlFor="saveOnlyThisMonth" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                        Salvar apenas para {monthNames[selectedMonth - 1]} de {selectedYear}
+                                    </Label>
+                                    <p className="text-xs text-muted-foreground">
+                                        Se desmarcado, esta se tornará a meta padrão para todos os meses futuros.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Save Button */}

@@ -86,7 +86,9 @@ export default function Dashboard() {
 
     const fetchSettings = async () => {
         try {
-            const { data } = await api.get('/couples/settings')
+            const { data } = await api.get('/couples/settings', {
+                params: { month: selectedMonth, year: selectedYear }
+            })
             if (data && data.monthly_savings_goal) {
                 setSavingsGoal(data.monthly_savings_goal)
             }

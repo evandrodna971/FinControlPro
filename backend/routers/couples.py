@@ -74,6 +74,8 @@ def delete_joint_goal(
 
 @router.get("/settings")
 def get_workspace_settings(
+    month: Optional[int] = None,
+    year: Optional[int] = None,
     current_user: models.User = Depends(auth_service.get_current_active_user),
     db: Session = Depends(database.get_db),
     workspace_id: Optional[int] = Depends(auth_service.get_current_workspace)
@@ -82,7 +84,20 @@ def get_workspace_settings(
     if not workspace_id:
         raise HTTPException(status_code=400, detail="No active workspace")
     
-    return crud.get_workspace_settings(db=db, workspace_id=workspace_id)
+    settings = crud.get_workspace_settings(db=db, workspace_id=workspace_id)
+    
+    # If month/year provided, fetch specific monthly goal
+    if month is not None and year is not None:
+        monthly_goal = crud.get_monthly_savings_goal(db=db, workspace_id=workspace_id, month=month, year=year)
+        return {
+            "id": settings.id,
+            "workspace_id": settings.workspace_id,
+            "approval_threshold": settings.approval_threshold,
+            "require_both_approval": settings.require_both_approval,
+            "monthly_savings_goal": monthly_goal
+        }
+    
+    return settings
 
 @router.put("/settings")
 def update_workspace_settings(
@@ -99,4 +114,25 @@ def update_workspace_settings(
         db=db,
         workspace_id=workspace_id,
         monthly_savings_goal=settings.monthly_savings_goal
+    )
+
+@router.put("/settings/monthly")
+def update_monthly_settings(
+    amount: float,
+    month: int,
+    year: int,
+    current_user: models.User = Depends(auth_service.get_current_active_user),
+    db: Session = Depends(database.get_db),
+    workspace_id: Optional[int] = Depends(auth_service.get_current_workspace)
+):
+    """Update monthly savings goal"""
+    if not workspace_id:
+        raise HTTPException(status_code=400, detail="No active workspace")
+    
+    return crud.update_monthly_savings_goal(
+        db=db,
+        workspace_id=workspace_id,
+        month=month,
+        year=year,
+        amount=amount
     )
