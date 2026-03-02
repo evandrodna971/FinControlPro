@@ -2,13 +2,11 @@ import { useState } from 'react'
 import { Check, Crown, Star, Zap, Shield, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { useAuthStore } from '@/store/useAuthStore'
 import { SEO } from '@/components/SEO'
 import { motion } from 'framer-motion'
 import { Badge } from '@/components/ui/badge'
 
 export default function Subscription() {
-    const { user } = useAuthStore()
     const [loading, setLoading] = useState<string | null>(null)
 
     const plans = [
