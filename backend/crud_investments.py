@@ -281,7 +281,7 @@ def get_portfolio_evolution(db: Session, user_id: int, workspace_id: Optional[in
     
     # Find first tx date
     first_tx_date = transactions[0].date if transactions else today
-    if isinstance(first_tx_date, datetime):
+    if hasattr(first_tx_date, 'date') and callable(getattr(first_tx_date, 'date')):
         first_tx_date = first_tx_date.date()
     elif isinstance(first_tx_date, str):
          first_tx_date = datetime.strptime(first_tx_date, "%Y-%m-%d").date()

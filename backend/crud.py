@@ -30,7 +30,10 @@ def create_user(db: Session, user: schemas.UserCreate):
         email=user.email,
         hashed_password=hashed_password,
         full_name=user.full_name,
-        role=user.role
+        role=user.role,
+        subscription_plan="free",
+        subscription_status="trial",
+        trial_start_date=datetime.now()
     )
     db.add(db_user)
     db.commit()

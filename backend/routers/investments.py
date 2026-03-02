@@ -206,10 +206,6 @@ def delete_alert(
     db.commit()
     return {"message": "Alert deleted successfully"}
 
-    db.delete(db_alert)
-    db.commit()
-    return {"message": "Alert deleted successfully"}
-
 @router.patch("/alerts/{alert_id}", response_model=schemas_investment.PriceAlert)
 def update_alert(
     alert_id: int,
