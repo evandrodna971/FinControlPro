@@ -56,8 +56,8 @@ def create_tables():
         user_migrations = [
             ('subscription_plan', "ALTER TABLE users ADD COLUMN subscription_plan VARCHAR DEFAULT 'free'"),
             ('subscription_status', "ALTER TABLE users ADD COLUMN subscription_status VARCHAR DEFAULT 'trial'"),
-            ('trial_start_date', "ALTER TABLE users ADD COLUMN trial_start_date DATETIME"),
-            ('subscription_end_date', "ALTER TABLE users ADD COLUMN subscription_end_date DATETIME"),
+            ('trial_start_date', "ALTER TABLE users ADD COLUMN trial_start_date TIMESTAMP"),
+            ('subscription_end_date', "ALTER TABLE users ADD COLUMN subscription_end_date TIMESTAMP"),
         ]
 
         for col_name, sql in user_migrations:
