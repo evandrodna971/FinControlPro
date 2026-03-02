@@ -247,7 +247,7 @@ export default function Dashboard() {
                     expenses={summary.total_expenses}
                 />
                 <SavingsGoalCard
-                    currentSavings={summary.total_income - summary.total_expenses}
+                    currentSavings={summary.total_balance}
                     savingsGoal={savingsGoal}
                 />
             </div>
