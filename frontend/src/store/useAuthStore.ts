@@ -7,6 +7,10 @@ interface User {
     email: string;
     role: string;
     full_name: string;
+    subscription_plan: string;
+    subscription_status: string;
+    trial_start_date: string;
+    subscription_end_date: string | null;
 }
 
 interface AuthState {

@@ -4,7 +4,7 @@ import { api } from '@/lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Link } from 'react-router-dom'
-import { Plus, TrendingUp, TrendingDown, Activity, ArrowRight } from 'lucide-react'
+import { Plus, TrendingUp, TrendingDown, Activity, ArrowRight, Crown } from 'lucide-react'
 import { TrendChart } from '@/components/TrendChart'
 import { CategoryPieChart } from '@/components/CategoryPieChart'
 import { UpcomingBills } from '@/components/UpcomingBills'
@@ -15,6 +15,7 @@ import { JointGoalCard } from '@/components/JointGoalCard'
 import { RecentTransactionsTimeline } from '@/components/RecentTransactionsTimeline'
 import { SEO } from '@/components/SEO'
 import { useMonth } from '@/context/MonthContext'
+import { useAuthStore } from '@/store/useAuthStore'
 
 interface Transaction {
     id: number;
@@ -43,6 +44,7 @@ interface Summary {
 export default function Dashboard() {
 
     const { activeWorkspace } = useWorkspaceStore()
+    const { user } = useAuthStore()
     const { selectedMonth, selectedYear, setSelectedMonth, setSelectedYear } = useMonth()
 
     const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -156,6 +158,29 @@ export default function Dashboard() {
                     </div>
                 </div>
             </div>
+            {/* Subscription Banner for Trial/Free users */}
+            {(user?.subscription_plan === 'free' || user?.subscription_status === 'trial') && (
+                <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-3xl p-6 text-white shadow-xl shadow-blue-500/20 flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative group">
+                    <div className="absolute top-0 right-0 -mt-8 -mr-8 w-48 h-48 bg-white/10 rounded-full blur-3xl group-hover:scale-125 transition-transform duration-700" />
+                    <div className="relative flex flex-col md:flex-row items-center gap-6">
+                        <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-sm">
+                            <Crown className="w-8 h-8 text-amber-300 fill-amber-300/20" />
+                        </div>
+                        <div className="text-center md:text-left">
+                            <h3 className="text-xl font-bold tracking-tight">Você está no período de teste gratuito ✨</h3>
+                            <p className="text-sm text-blue-100/80 max-w-md">
+                                Aproveite todos os recursos ilimitados! Restam poucos dias para sua conta mudar para o plano limitado.
+                            </p>
+                        </div>
+                    </div>
+                    <Link to="/subscription" className="relative">
+                        <Button className="bg-white text-blue-700 hover:bg-blue-50 font-black rounded-xl px-8 py-6 h-auto shadow-lg group/btn">
+                            Ver Planos Pro
+                            <ArrowRight className="ml-2 w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                        </Button>
+                    </Link>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
                 {/* Balance Card */}

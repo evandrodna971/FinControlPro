@@ -16,9 +16,20 @@ def get_asset(db: Session, asset_id: int):
     return db.query(models.InvestmentAsset).filter(models.InvestmentAsset.id == asset_id).first()
 
 def create_asset(db: Session, asset: schemas_investment.InvestmentAssetCreate, user_id: int, workspace_id: Optional[int] = None):
-    # Check if asset already exists in this context to avoid duplicates (optional, based on symbol)
-    # For now allow multiples or handle via logic
+    # Check user subscription and limits
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        return None # Or raise exception
     
+    is_trial_or_free = user.subscription_plan == "free" or user.subscription_status == "trial"
+    
+    if is_trial_or_free:
+        current_assets_count = db.query(models.InvestmentAsset).filter(
+            models.InvestmentAsset.user_id == user_id
+        ).count()
+        if current_assets_count >= 2:
+            raise Exception("Limite de 2 ativos atingido no plano Free/Trial. Faça o upgrade para acompanhar mais ativos.")
+
     db_asset = models.InvestmentAsset(
         symbol=asset.symbol,
         name=asset.name,

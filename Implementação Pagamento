@@ -1,0 +1,386 @@
+Visão Geral da Solução PagBrasil para o FinControl Pro
+O PagBrasil oferece duas formas principais de implementar assinaturas, e você pode escolher a que melhor se adapta ao seu nível de controle desejado:
+
+Característica	API Direta	PagStream®
+Controle	Total sobre UX e fluxo	Gerenciamento pronto
+Complexidade	Média/Alta (você gerencia tudo)	Baixa (plataforma gerencia)
+Funcionalidades	Customizável	Retentativas automáticas, gestão de planos, portal do assinante 
+Ideal para	Quem quer experiência 100% customizada	Quem quer agilidade e redução de churn
+Minha recomendação: Para o FinControl Pro, comece com a API direta para ter controle total sobre a experiência do usuário, mas avalie migrar para o PagStream® futuramente para se beneficiar das retentativas automáticas e gestão de inadimplência .
+
+1. O Poder do Pix Automático para seu SaaS
+O Pix Automático é a grande virada de chave para assinaturas no Brasil. Ele funciona como um débito automático, mas com a infraestrutura do Pix .
+
+Vantagens competitivas para o FinControl Pro:
+
+Custo até 14x menor que cartão de crédito 
+
+Alcance: atinge os 35 milhões de brasileiros sem cartão de crédito 
+
+Sucesso nas cobranças: até 3 retentativas em 7 dias 
+
+Sem falhas por cartão vencido: débito direto na conta
+
+2. Estruturando a Integração no Backend (FastAPI)
+Endpoints que você precisará criar:
+python
+# Estrutura sugerida no backend
+backend/
+├── routers/
+│   ├── subscriptions.py     # Endpoints de assinatura
+│   └── webhooks.py          # Endpoint para notificações PagBrasil
+├── services/
+│   └── pagbrasil.py         # Lógica de integração com a API
+├── models.py                 # Modelos Subscription, Plan, PaymentHistory
+└── crud.py                   # Funções de banco para assinaturas
+Modelos de Dados Necessários:
+python
+# models.py (exemplo)
+class Plan(Base):
+    __tablename__ = "plans"
+    
+    id = Column(Integer, primary_key=True)
+    name = Column(String)  # Starter, Profissional, Enterprise
+    price_monthly = Column(Float)
+    price_quarterly = Column(Float)  # com desconto
+    price_yearly = Column(Float)     # com desconto
+    features = Column(JSON)
+    pagbrasil_plan_id = Column(String)  # ID do plano no PagBrasil (se usar PagStream)
+
+class Subscription(Base):
+    __tablename__ = "subscriptions"
+    
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    plan_id = Column(Integer, ForeignKey("plans.id"))
+    status = Column(String)  # active, pending, canceled, expired
+    pagbrasil_subscription_id = Column(String)  # ID da assinatura no PagBrasil
+    pagbrasil_recurrence_id = Column(String)    # ID da recorrência
+    next_billing_date = Column(DateTime)
+    created_at = Column(DateTime)
+    cancelled_at = Column(DateTime)
+3. Fluxo de Integração com API Direta
+Jornada 1: Pagamento Inicial + Consentimento (para planos pagos desde o início)
+Esta é a jornada ideal para quando o usuário contrata e já paga o primeiro mês .
+
+Passo a passo técnico:
+
+Frontend coleta dados e chama seu backend
+
+Backend envia requisição para PagBrasil:
+
+python
+# services/pagbrasil.py
+import httpx
+from datetime import datetime
+
+PAGBRASIL_API_URL = "https://api.pagbrasil.com"  # ou sandbox para testes
+PAGBRASIL_SECRET = "seu_secret_do_dashboard"
+PAGBRASIL_TOKEN = "seu_pbtoken"
+
+async def create_subscription_with_initial_payment(user_data, plan_data):
+    """
+    Cria uma assinatura com pagamento inicial + consentimento
+    Documentação: https://www.pagbrasil.com/pt-br/blog/pix/api-pix-automatico-da-pagbrasil-guia-de-integracao-para-desenvolvedores/ [citation:1]
+    """
+    payload = {
+        "secret": PAGBRASIL_SECRET,
+        "pbtoken": PAGBRASIL_TOKEN,
+        "customer": {
+            "name": user_data["name"],
+            "email": user_data["email"],
+            "cpf_cnpj": user_data["cpf"],
+            "phone": user_data["phone"],
+            "address": user_data["address"]
+        },
+        "order": {
+            "amount": plan_data["price"],  # Valor da primeira cobrança
+            "description": f"Plano {plan_data['name']} - FinControl Pro",
+            "payment_method": "pix_automatic"  # Importante!
+        },
+        "recurrence": {
+            "frequency": "M",  # M = mensal, Q = trimestral, Y = anual
+            "frequency_value": 1,
+            "limit": 0,  # 0 = indefinido
+            "first_charge_date": datetime.now().strftime("%Y-%m-%d")  # hoje
+        }
+    }
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"{PAGBRASIL_API_URL}/order/create",
+            json=payload
+        )
+        return response.json()
+PagBrasil retorna QR Code e código Pix :
+
+json
+{
+    "order_id": "ORD_123456",
+    "pix_image": "https://api.pagbrasil.com/qrcode/123456.png",
+    "pix_code": "00020126580014br.gov.bcb.pix0136...",
+    "recurrence_id": "REC_789012",
+    "status": "waiting_payment"
+}
+Frontend exibe QR Code para o usuário pagar via app do banco
+
+Usuário autoriza a recorrência no banco (uma única vez)
+
+PagBrasil envia webhook para seu backend confirmando
+
+Jornada 2: Apenas Consentimento (para períodos de trial)
+Perfeito se você quiser oferecer testes grátis :
+
+python
+async def create_consent_only(user_data, plan_data, trial_days=7):
+    """
+    Cria apenas o consentimento para cobranças futuras
+    Ideal para períodos de teste gratuito
+    """
+    first_charge_date = (datetime.now() + timedelta(days=trial_days)).strftime("%Y-%m-%d")
+    
+    payload = {
+        "secret": PAGBRASIL_SECRET,
+        "pbtoken": PAGBRASIL_TOKEN,
+        "customer": user_data,
+        "recurrence": {
+            "frequency": "M",
+            "amount": plan_data["price"],
+            "first_charge_date": first_charge_date,
+            "description": f"Assinatura FinControl Pro - {plan_data['name']}"
+        }
+    }
+    
+    # Endpoint específico para consentimento
+    response = await client.post(
+        f"{PAGBRASIL_API_URL}/recurrence/consent",
+        json=payload
+    )
+    return response.json()
+4. Implementação dos Webhooks (CRÍTICO!)
+Os webhooks são a espinha dorsal da sincronização. O PagBrasil notificará seu backend sobre todos os eventos importantes .
+
+Endpoint de Webhook no FastAPI:
+python
+# routers/webhooks.py
+from fastapi import APIRouter, Request, HTTPException
+import hmac
+import hashlib
+
+router = APIRouter(prefix="/webhooks", tags=["webhooks"])
+
+@router.post("/pagbrasil")
+async def pagbrasil_webhook(request: Request):
+    """
+    Recebe notificações do PagBrasil sobre mudanças nas assinaturas
+    """
+    body = await request.body()
+    headers = request.headers
+    
+    # VALIDAÇÃO DE SEGURANÇA: verificar se é realmente do PagBrasil
+    signature = headers.get("X-PagBrasil-Signature")
+    expected_signature = hmac.new(
+        key=PAGBRASIL_SECRET.encode(),
+        msg=body,
+        digestmod=hashlib.sha256
+    ).hexdigest()
+    
+    if signature != expected_signature:
+        raise HTTPException(status_code=401, detail="Invalid signature")
+    
+    # Processar o evento
+    data = await request.json()
+    event_type = data.get("event")  # payment_confirmed, recurrence_authorized, etc.
+    
+    if event_type == "payment_confirmed":
+        # Liberar acesso ao usuário
+        await handle_payment_confirmed(data)
+    
+    elif event_type == "recurrence_authorized":
+        # Consentimento para recorrência foi autorizado
+        await handle_recurrence_authorized(data)
+    
+    elif event_type == "payment_failed":
+        # Notificar usuário e tentar novamente
+        await handle_payment_failed(data)
+    
+    # Responder para o PagBrasil confirmando recebimento
+    return {"status": "received", "timestamp": datetime.now().isoformat()}
+
+async def handle_payment_confirmed(data):
+    """Pagamento confirmado - ativar/renovar assinatura"""
+    subscription_id = data["subscription_id"]
+    
+    # Atualizar status no banco
+    await update_subscription_status(
+        subscription_id=subscription_id,
+        status="active",
+        next_billing_date=data["next_billing_date"]
+    )
+    
+    # Registrar no histórico
+    await create_payment_history(
+        subscription_id=subscription_id,
+        amount=data["amount"],
+        status="paid"
+    )
+
+async def handle_payment_failed(data):
+    """Pagamento falhou - tentar novamente ou notificar"""
+    subscription_id = data["subscription_id"]
+    
+    # O PagBrasil fará até 3 retentativas em 7 dias [citation:2]
+    # Você pode notificar o usuário
+    await notify_user_payment_failed(subscription_id)
+Tabela de Status de Assinatura (importante para seu banco) :
+Código	Status	Descrição
+0	Waiting for first payment	Aguardando pagamento inicial
+1	Active	Assinatura ativa
+2	Pending payment	Pagamento pendente
+3	Inactive/Cancelled	Cancelada
+4	Expired	Expirada
+5	Paused	Pausada
+5. Gerenciamento de Assinaturas no Backend
+Consultando Status via API :
+python
+async def get_subscription_status(pagbrasil_subscription_id: str):
+    """
+    Consulta status de uma assinatura diretamente no PagBrasil
+    """
+    payload = {
+        "secret": PAGBRASIL_SECRET,
+        "pbtoken": PAGBRASIL_TOKEN,
+        "subscription": pagbrasil_subscription_id
+    }
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"{PAGBRASIL_API_URL}/api/pagstream/subscription/get",
+            data=payload,  # x-www-form-urlencoded
+            headers={"Content-Type": "application/x-www-form-urlencoded"}
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            # Campos importantes [citation:8]:
+            # - status: código do status
+            # - next_billing_date: próxima cobrança
+            # - amount_brl: valor
+            # - recurrences: histórico de cobranças
+            return data
+Cancelamento de Assinatura:
+python
+async def cancel_subscription(pagbrasil_subscription_id: str):
+    """
+    Cancela uma assinatura ativa
+    """
+    payload = {
+        "secret": PAGBRASIL_SECRET,
+        "pbtoken": PAGBRASIL_TOKEN,
+        "subscription": pagbrasil_subscription_id
+    }
+    
+    response = await client.post(
+        f"{PAGBRASIL_API_URL}/api/pagstream/subscription/cancel",
+        data=payload
+    )
+    # Webhook de cancelamento será enviado
+    return response.json()
+6. Frontend: Exibindo QR Code Pix
+No seu frontend React, após receber os dados do backend:
+
+tsx
+// components/PixPayment.tsx
+import { useState, useEffect } from 'react';
+import { QRCodeSVG } from 'qrcode.react'; // ou use uma lib de QR Code
+
+interface PixPaymentProps {
+  pixImage: string;  // URL da imagem QR Code
+  pixCode: string;   // código copia e cola
+  onPaymentConfirmed: () => void;
+}
+
+export function PixPayment({ pixImage, pixCode, onPaymentConfirmed }: PixPaymentProps) {
+  const [copied, setCopied] = useState(false);
+  
+  // Aguarda webhook de confirmação
+  useEffect(() => {
+    // Você pode usar Server-Sent Events ou polling
+    // Mas o ideal é confiar no webhook + atualização via query
+    const checkPayment = setInterval(() => {
+      // Chamar API para verificar status
+      fetch('/api/subscription/status')
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 'active') {
+            onPaymentConfirmed();
+            clearInterval(checkPayment);
+          }
+        });
+    }, 5000);
+    
+    return () => clearInterval(checkPayment);
+  }, []);
+  
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(pixCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  
+  return (
+    <div className="p-6 bg-white rounded-lg shadow-lg">
+      <h3 className="text-lg font-semibold mb-4">Pagamento via Pix</h3>
+      
+      <div className="flex flex-col items-center">
+        {/* QR Code */}
+        <img src={pixImage} alt="QR Code Pix" className="w-64 h-64 mb-4" />
+        
+        {/* Código copia e cola */}
+        <div className="w-full bg-gray-100 p-3 rounded mb-3">
+          <p className="text-sm truncate">{pixCode}</p>
+        </div>
+        
+        <button
+          onClick={copyToClipboard}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          {copied ? 'Copiado!' : 'Copiar código'}
+        </button>
+        
+        <p className="text-sm text-gray-500 mt-4">
+          Após o pagamento, sua assinatura será ativada automaticamente.
+          Você será notificado por e-mail e WhatsApp.
+        </p>
+      </div>
+    </div>
+  );
+}
+7. Segurança e Boas Práticas
+Validação de Webhooks (ESSENCIAL) :
+Sempre valide a assinatura dos webhooks para garantir que são do PagBrasil, como mostrado no exemplo acima.
+
+Ambiente de Testes :
+Use o ambiente sandbox para testes:
+
+URL: https://sandbox.pagbrasil.com
+
+Cartões e cenários de teste disponíveis no dashboard
+
+Rate Limiting:
+O PagBrasil pode aplicar limitação de taxa para proteger a API . Implemente retry com exponential backoff.
+
+8. Próximos Passos
+Crie sua conta no PagBrasil e acesse o dashboard
+
+Obtenha suas credenciais: secret e pbtoken 
+
+Configure o ambiente de sandbox para testes
+
+Implemente os endpoints no seu FastAPI
+
+Crie a interface de planos no frontend
+
+Teste todo o fluxo com cartões de teste
+
+Configure os webhooks em produção com URL pública (use ngrok para testes locais)

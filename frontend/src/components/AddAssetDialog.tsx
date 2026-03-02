@@ -23,9 +23,10 @@ interface TransactionItem {
 
 interface AddAssetDialogProps {
     onAssetAdded: () => void
+    isDisabled?: boolean
 }
 
-export function AddAssetDialog({ onAssetAdded }: AddAssetDialogProps) {
+export function AddAssetDialog({ onAssetAdded, isDisabled }: AddAssetDialogProps) {
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
     const [step, setStep] = useState(1)
@@ -139,8 +140,12 @@ export function AddAssetDialog({ onAssetAdded }: AddAssetDialogProps) {
     return (
         <Dialog open={open} onOpenChange={(val) => { setOpen(val); if (!val) resetForm(); }}>
             <DialogTrigger asChild>
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 transition-all active:scale-95 px-6 font-bold tracking-tight">
-                    <Plus className="mr-2 h-4 w-4" /> Novo Ativo
+                <Button
+                    disabled={isDisabled}
+                    className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 transition-all active:scale-95 px-6 font-bold tracking-tight disabled:bg-slate-300 disabled:shadow-none"
+                    title={isDisabled ? "Limite de ativos atingido no plano Free/Trial" : ""}
+                >
+                    <Plus className="mr-2 h-4 w-4" /> {isDisabled ? "Limite Atingido" : "Novo Ativo"}
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[600px] w-[95%] p-0 overflow-hidden border-none shadow-2xl bg-slate-50 dark:bg-slate-950 max-h-[95vh] flex flex-col">

@@ -9,8 +9,10 @@ import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useWorkspaceStore } from '@/store/useWorkspaceStore'
 import { useMonth } from '@/context/MonthContext'
+import { useAuthStore } from '@/store/useAuthStore'
 
 export default function WorkspaceSettings() {
+    const { user } = useAuthStore()
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [monthlySavingsGoal, setMonthlySavingsGoal] = useState(5000.0)
@@ -18,6 +20,9 @@ export default function WorkspaceSettings() {
     const [newWorkspaceName, setNewWorkspaceName] = useState('')
     const { activeWorkspace, workspaces, setActiveWorkspace, setWorkspaces } = useWorkspaceStore()
     const { selectedMonth, selectedYear } = useMonth()
+
+    const isTrialOrFree = user?.subscription_plan === 'free' || user?.subscription_status === 'trial'
+    const isWorkspaceLimitReached = isTrialOrFree && workspaces.length >= 1
 
     const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]
 
@@ -158,16 +163,22 @@ export default function WorkspaceSettings() {
                                 <Input
                                     id="newWorkspace"
                                     type="text"
+                                    disabled={isWorkspaceLimitReached}
                                     value={newWorkspaceName}
                                     onChange={(e) => setNewWorkspaceName(e.target.value)}
-                                    placeholder="Nome do workspace"
-                                    onKeyDown={(e) => e.key === 'Enter' && handleCreateWorkspace()}
+                                    placeholder={isWorkspaceLimitReached ? "Limite de 1 workspace atingido" : "Nome do workspace"}
+                                    onKeyDown={(e) => e.key === 'Enter' && !isWorkspaceLimitReached && handleCreateWorkspace()}
                                 />
-                                <Button onClick={handleCreateWorkspace}>
+                                <Button onClick={handleCreateWorkspace} disabled={isWorkspaceLimitReached}>
                                     <Plus className="w-4 h-4 mr-2" />
-                                    Criar
+                                    {isWorkspaceLimitReached ? 'Limite Atingido' : 'Criar'}
                                 </Button>
                             </div>
+                            {isWorkspaceLimitReached && (
+                                <p className="text-xs text-amber-600 font-medium">
+                                    Assine um plano Pro para criar workspaces ilimitados.
+                                </p>
+                            )}
                         </div>
 
                         {/* Workspace List */}

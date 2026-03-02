@@ -82,6 +82,7 @@ import WorkspaceSettings from '@/pages/WorkspaceSettings'
 import Investments from '@/pages/Investments'
 import { MarketDashboard } from '@/pages/MarketDashboard'
 import Onboarding from '@/pages/Onboarding'
+import Subscription from '@/pages/Subscription'
 
 function App() {
     const checkAuth = useAuthStore(state => state.checkAuth)
@@ -166,6 +167,11 @@ function App() {
                     <Route path="/market-ranks" element={
                         <ProtectedRoute>
                             <MarketDashboard />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/subscription" element={
+                        <ProtectedRoute>
+                            <Subscription />
                         </ProtectedRoute>
                     } />
                     <Route path="/" element={<Navigate to="/dashboard" replace />} />

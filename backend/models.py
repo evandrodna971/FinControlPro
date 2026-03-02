@@ -15,6 +15,12 @@ class User(Base):
     display_color = Column(String, default="#3b82f6")  # User's badge color
     avatar_emoji = Column(String, default="👤")  # User's emoji
     phone_number = Column(String, unique=True, nullable=True, index=True) # WhatsApp number
+    
+    # Subscription Fields
+    subscription_plan = Column(String, default="free") # free, monthly, quarterly, annual
+    subscription_status = Column(String, default="trial") # trial, active, expired, canceled
+    trial_start_date = Column(DateTime, default=datetime.now)
+    subscription_end_date = Column(DateTime, nullable=True)
 
     transactions = relationship("Transaction", foreign_keys="Transaction.user_id", back_populates="owner")
     categories = relationship("Category", back_populates="owner")

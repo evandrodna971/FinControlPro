@@ -3,14 +3,24 @@ from . import models, schemas_workspace
 from datetime import datetime
 
 def create_workspace(db: Session, workspace: schemas_workspace.WorkspaceCreate, user_id: int):
-    # Check limit: max 5 workspaces as owner
+    # Check user subscription and limits
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise Exception("Usuário não encontrado.")
+
+    # Limit for Free/Trial: 1 workspace as owner
     current_workspaces_count = db.query(models.UserWorkspace).filter(
         models.UserWorkspace.user_id == user_id,
         models.UserWorkspace.role == "owner"
     ).count()
 
+    is_trial_or_free = user.subscription_plan == "free" or user.subscription_status == "trial"
+    
+    if is_trial_or_free and current_workspaces_count >= 1:
+        raise Exception("Limite de 1 Área de Trabalho atingido no plano Free/Trial. Faça o upgrade para criar mais.")
+    
     if current_workspaces_count >= 5:
-        raise Exception("Limite de 5 Áreas de Trabalho atingido. Exclua uma para criar uma nova.")
+        raise Exception("Limite máximo de 5 Áreas de Trabalho atingido.")
 
     # Create the workspace
     db_workspace = models.Workspace(name=workspace.name, type=workspace.type)

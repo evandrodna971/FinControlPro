@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional
+from datetime import datetime
 
 class UserBase(BaseModel):
     email: EmailStr
@@ -14,6 +15,10 @@ class UserResponse(UserBase):
     full_name: Optional[str] = None
     role: str
     is_active: bool
+    subscription_plan: str
+    subscription_status: str
+    trial_start_date: datetime
+    subscription_end_date: Optional[datetime] = None
 
     class Config:
         from_attributes = True

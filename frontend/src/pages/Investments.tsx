@@ -37,6 +37,7 @@ import { marketService } from '@/services/marketService'
 import { AssetHistoryChart } from '@/components/market/AssetHistoryChart'
 import { toast } from 'sonner'
 import { SEO } from '@/components/SEO'
+import { useAuthStore } from '@/store/useAuthStore'
 
 
 interface Asset {
@@ -77,6 +78,10 @@ export default function Investments() {
     const [summary, setSummary] = useState<PortfolioSummary | null>(null)
     const [assets, setAssets] = useState<Asset[]>([])
     const [isLoading, setIsLoading] = useState(true)
+    const { user } = useAuthStore()
+
+    const isTrialOrFree = user?.subscription_plan === 'free' || user?.subscription_status === 'trial'
+    const isLimitReached = isTrialOrFree && assets.length >= 2
 
     // Modal states
     const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null)
@@ -619,7 +624,7 @@ export default function Investments() {
                             </Select>
                         </div>
                         <div className="flex gap-3 w-full md:w-auto">
-                            <AddAssetDialog onAssetAdded={fetchData} />
+                            <AddAssetDialog onAssetAdded={fetchData} isDisabled={isLimitReached} />
                         </div>
                     </div>
 
