@@ -20,7 +20,7 @@ export function TrendChart({ incomeData, expenseData }: TrendChartProps) {
     }))
 
     return (
-        <Card className="transition-all duration-300 hover:shadow-lg">
+        <Card className="transition-all duration-300 hover:shadow-lg border-none bg-muted/20">
             <CardHeader>
                 <CardTitle>Tendências Mensais</CardTitle>
             </CardHeader>

@@ -17,7 +17,7 @@ export function SavingsGoalCard({ currentSavings, savingsGoal }: SavingsGoalCard
         <Card className="transition-all duration-300 hover:shadow-lg border-none bg-muted/20">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
-                    <Target className={cn("h-5 w-5", isNegative ? "text-rose-500" : "text-blue-600")} />
+                    <Target className={cn("h-5 w-5", isNegative ? "text-red-600" : "text-blue-600")} />
                     <span>Meta de Economia</span>
                 </CardTitle>
             </CardHeader>
@@ -26,7 +26,7 @@ export function SavingsGoalCard({ currentSavings, savingsGoal }: SavingsGoalCard
                     {/* Current vs Goal */}
                     <div className="flex justify-between items-baseline">
                         <div>
-                            <p className={cn("text-2xl font-bold", isNegative ? "text-rose-500" : "text-blue-600")}>
+                            <p className={cn("text-2xl font-bold", isNegative ? "text-red-600" : "text-blue-600")}>
                                 R$ {currentSavings.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </p>
                             <p className="text-sm text-muted-foreground">
@@ -36,7 +36,7 @@ export function SavingsGoalCard({ currentSavings, savingsGoal }: SavingsGoalCard
                         <div className="text-right">
                             <p className={cn(
                                 "text-lg font-black",
-                                isNegative ? "text-rose-500" :
+                                isNegative ? "text-red-600" :
                                     savingsPercentage >= 100 ? "text-green-500" :
                                         savingsPercentage >= 50 ? "text-blue-500" : "text-orange-500"
                             )}>
@@ -51,7 +51,7 @@ export function SavingsGoalCard({ currentSavings, savingsGoal }: SavingsGoalCard
                             className={cn(
                                 "h-full transition-all duration-700 ease-out",
                                 isNegative
-                                    ? "bg-rose-500/20"
+                                    ? "bg-red-600/30"
                                     : "bg-gradient-to-r from-blue-600 to-emerald-500"
                             )}
                             style={{ width: `${displayPercentage}%` }}

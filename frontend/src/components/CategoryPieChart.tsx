@@ -224,7 +224,7 @@ const PieChartContent = ({ data, colors, idPrefix }: { data: CategoryData[], col
 
 export function CategoryPieChart({ expenseData = [], incomeData = [] }: CategoryPieChartProps) {
     return (
-        <Card className="flex flex-col h-full">
+        <Card className="flex flex-col h-full border-none bg-muted/20 shadow-none">
             <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                     <CardTitle>Análise por Categoria</CardTitle>

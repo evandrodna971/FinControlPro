@@ -78,7 +78,7 @@ export function UpcomingBills({ month, year, onUpdate }: { month: number, year: 
                     return (
                         <div
                             key={bill.id}
-                            className={`relative overflow-hidden rounded-xl bg-slate-950/40 backdrop-blur-md border border-white/5 shadow-lg hover:shadow-2xl hover:bg-slate-900/60 transition-all duration-300 group`}
+                            className={`relative overflow-hidden rounded-xl bg-muted/20 border-none shadow-sm hover:shadow-xl hover:bg-muted/30 transition-all duration-300 group`}
                         >
                             {/* Accent Line */}
                             <div className={`absolute left-0 top-0 bottom-0 w-1 ${bill.type === 'expense' ? 'bg-rose-500' : 'bg-emerald-500'}`} />

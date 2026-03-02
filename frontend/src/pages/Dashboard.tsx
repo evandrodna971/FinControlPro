@@ -173,26 +173,26 @@ export default function Dashboard() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
                 {/* Balance Card */}
-                <Card className="transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer bg-gradient-to-br from-blue-950 to-cyan-950 dark:from-blue-50 dark:to-cyan-50 border-blue-800 dark:border-blue-200 overflow-hidden relative group">
+                <Card className="transition-all duration-300 hover:scale-[1.02] hover:shadow-xl cursor-pointer bg-muted/20 border-none overflow-hidden relative group">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-                        <Activity className="h-12 w-12 text-blue-400 dark:text-blue-600" />
+                        <Activity className="h-12 w-12 text-blue-500" />
                     </div>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-blue-300 dark:text-blue-700">Saldo Total</CardTitle>
-                        <Activity className="h-4 w-4 text-blue-400 dark:text-blue-600 md:hidden" />
+                        <CardTitle className="text-sm font-medium text-blue-500">Saldo Total</CardTitle>
+                        <Activity className="h-4 w-4 text-blue-500 md:hidden" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl md:text-3xl font-bold text-blue-100 dark:text-blue-900">
+                        <div className="text-2xl md:text-3xl font-bold text-blue-500 drop-shadow-sm">
                             R${(summary.total_balance || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </div>
-                        <p className="text-xs text-blue-400 dark:text-blue-600 mt-1">
+                        <p className="text-xs text-blue-400/80 mt-1 font-medium">
                             Disponível para uso
                         </p>
                     </CardContent>
                 </Card>
 
                 {/* Income Card */}
-                <Card className="transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer bg-gradient-to-br from-green-950 to-emerald-950 dark:from-green-50 dark:to-emerald-50 border-green-800 dark:border-green-200 overflow-hidden relative group">
+                <Card className="transition-all duration-300 hover:scale-[1.02] hover:shadow-xl cursor-pointer bg-muted/20 border-none overflow-hidden relative group">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
                         <TrendingUp className="h-12 w-12 text-green-400 dark:text-green-600" />
                     </div>
@@ -216,21 +216,21 @@ export default function Dashboard() {
                 </Card>
 
                 {/* Expenses Card */}
-                <Card className="transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer bg-gradient-to-br from-red-950 to-rose-950 dark:from-red-50 dark:to-rose-50 border-red-800 dark:border-red-200 overflow-hidden relative group">
+                <Card className="transition-all duration-300 hover:scale-[1.02] hover:shadow-xl cursor-pointer bg-muted/20 border-none overflow-hidden relative group">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-                        <TrendingDown className="h-12 w-12 text-red-400 dark:text-red-600" />
+                        <TrendingDown className="h-12 w-12 text-red-600" />
                     </div>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-red-300 dark:text-red-700">Despesas</CardTitle>
-                        <TrendingDown className="h-4 w-4 text-red-400 dark:text-red-600 md:hidden" />
+                        <CardTitle className="text-sm font-medium text-red-600">Despesas</CardTitle>
+                        <TrendingDown className="h-4 w-4 text-red-600 md:hidden" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl md:text-3xl font-bold text-red-400 dark:text-red-700">
+                        <div className="text-2xl md:text-3xl font-bold text-red-600">
                             -R${(summary.total_expenses || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </div>
-                        <div className="mt-1 flex items-center gap-1 text-[10px] sm:text-xs text-red-400 dark:text-red-600 font-medium">
+                        <div className="mt-1 flex items-center gap-1 text-[10px] sm:text-xs text-red-600 font-medium">
                             {summary.expense_trend.length > 1 && (
-                                <span className="bg-red-900/30 dark:bg-red-100 px-1.5 py-0.5 rounded-md">
+                                <span className="bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded-md text-red-600">
                                     ↑ {((summary.total_expenses - (summary.expense_trend[summary.expense_trend.length - 2]?.value || 0)) / (summary.expense_trend[summary.expense_trend.length - 2]?.value || 1) * 100).toFixed(0)}%
                                 </span>
                             )}
@@ -245,6 +245,7 @@ export default function Dashboard() {
                 <FinancialHealthIndicator
                     income={summary.total_income}
                     expenses={summary.total_expenses}
+                    totalBalance={summary.total_balance}
                 />
                 <SavingsGoalCard
                     currentSavings={summary.total_balance}
@@ -290,7 +291,7 @@ export default function Dashboard() {
                 <UpcomingBills month={selectedMonth} year={selectedYear} onUpdate={fetchData} />
             </div>
 
-            <Card className="border-none shadow-md overflow-hidden rounded-3xl">
+            <Card className="border-none shadow-none bg-muted/20 overflow-hidden rounded-3xl">
                 <CardHeader className="bg-muted/10 pb-4">
                     <CardTitle className="flex justify-between items-center text-lg">
                         Transações Recentes

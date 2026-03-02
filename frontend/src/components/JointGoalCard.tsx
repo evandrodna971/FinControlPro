@@ -35,7 +35,7 @@ export function JointGoalCard({ goal }: JointGoalCardProps) {
     }
 
     return (
-        <Card className="transition-all duration-300 hover:shadow-lg">
+        <Card className="transition-all duration-300 hover:shadow-lg border-none bg-muted/20">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Heart className="h-5 w-5 text-pink-500" />

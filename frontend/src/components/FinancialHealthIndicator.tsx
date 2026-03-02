@@ -5,24 +5,36 @@ import { Activity, TrendingUp, AlertCircle } from "lucide-react"
 interface FinancialHealthIndicatorProps {
     income: number
     expenses: number
+    totalBalance: number
 }
 
-export function FinancialHealthIndicator({ income, expenses }: FinancialHealthIndicatorProps) {
+export function FinancialHealthIndicator({ income, expenses, totalBalance }: FinancialHealthIndicatorProps) {
     // Calculate health score (0-100)
     const calculateHealthScore = (): number => {
-        if (income === 0) return 0
+        if (income === 0 && totalBalance <= 0) return 0
 
-        const savingsRate = ((income - expenses) / income) * 100
+        // Calculate monthly performance score
+        const monthlySavings = income - expenses
+        const monthlySavingsRate = income > 0 ? (monthlySavings / income) * 100 : (monthlySavings > 0 ? 100 : -100)
 
-        // Score based on savings rate
-        if (savingsRate >= 20) {
-            return Math.min(100, 70 + (savingsRate - 20) * 1.5)
-        } else if (savingsRate >= 0) {
-            return 40 + (savingsRate / 20) * 30
+        let score = 0
+        if (monthlySavingsRate >= 20) {
+            score = Math.min(100, 70 + (monthlySavingsRate - 20) * 1.5)
+        } else if (monthlySavingsRate >= 0) {
+            score = 40 + (monthlySavingsRate / 20) * 30
         } else {
             // Negative savings (deficit)
-            return Math.max(0, 40 + (savingsRate / 50) * 40)
+            score = Math.max(0, 40 + (monthlySavingsRate / 50) * 40)
         }
+
+        // Apply penalty for negative total balance (Debt/Deficit)
+        if (totalBalance < 0) {
+            // If total balance is negative, the health cannot be higher than 25 (Critical/Low Attention)
+            // even if the current month is positive.
+            score = Math.min(score, 25) * (monthlySavingsRate < 0 ? 0.6 : 1)
+        }
+
+        return Math.max(0, Math.min(100, score))
     }
 
     const healthScore = calculateHealthScore()
@@ -30,32 +42,35 @@ export function FinancialHealthIndicator({ income, expenses }: FinancialHealthIn
 
     // Determine health status
     const getHealthStatus = () => {
+        if (totalBalance < 0) return { label: "Crítico", color: "text-red-600", icon: AlertCircle }
         if (healthScore >= 80) return { label: "Excelente", color: "text-green-600", icon: TrendingUp }
         if (healthScore >= 60) return { label: "Saudável", color: "text-green-500", icon: Activity }
         if (healthScore >= 40) return { label: "Moderado", color: "text-yellow-500", icon: Activity }
         if (healthScore >= 20) return { label: "Atenção", color: "text-orange-500", icon: AlertCircle }
-        return { label: "Crítico", color: "text-red-500", icon: AlertCircle }
+        return { label: "Crítico", color: "text-red-600", icon: AlertCircle }
     }
 
     const getHealthColor = () => {
+        if (totalBalance < 0) return "bg-red-600"
         if (healthScore >= 70) return "bg-green-500"
         if (healthScore >= 40) return "bg-yellow-500"
-        return "bg-red-500"
+        return "bg-red-600"
     }
 
     const getHealthMessage = () => {
+        if (totalBalance < 0) return "Seu saldo total está negativo. Isso indica um risco financeiro alto."
         if (income === 0) return "Adicione receitas para ver sua saúde financeira"
         if (savingsRate >= 20) return "Parabéns! Você está economizando bem"
         if (savingsRate >= 10) return "Bom trabalho! Continue economizando"
         if (savingsRate >= 0) return "Tente economizar pelo menos 10% da sua renda"
-        return "Atenção! Suas despesas excedem suas receitas"
+        return "Cuidado! Suas despesas deste mês excederam suas receitas"
     }
 
     const status = getHealthStatus()
     const StatusIcon = status.icon
 
     return (
-        <Card className="transition-all duration-300 hover:shadow-lg">
+        <Card className="transition-all duration-300 hover:shadow-lg border-none bg-muted/20">
             <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                     <span>Saúde Financeira</span>
