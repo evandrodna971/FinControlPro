@@ -4,14 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ArrowLeft, Save, Plus, Trash2, Briefcase } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { ArrowLeft, Save, Plus, Trash2, Briefcase, Crown } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useWorkspaceStore } from '@/store/useWorkspaceStore'
 import { useMonth } from '@/context/MonthContext'
 import { useAuthStore } from '@/store/useAuthStore'
 
 export default function WorkspaceSettings() {
+    const navigate = useNavigate()
     const { user } = useAuthStore()
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
@@ -82,6 +83,11 @@ export default function WorkspaceSettings() {
     }
 
     const handleCreateWorkspace = async () => {
+        if (isWorkspaceLimitReached) {
+            navigate('/subscription')
+            return
+        }
+
         if (!newWorkspaceName.trim()) {
             toast.error('Digite um nome para o workspace')
             return
@@ -166,12 +172,15 @@ export default function WorkspaceSettings() {
                                     disabled={isWorkspaceLimitReached}
                                     value={newWorkspaceName}
                                     onChange={(e) => setNewWorkspaceName(e.target.value)}
-                                    placeholder={isWorkspaceLimitReached ? "Limite de 1 workspace atingido" : "Nome do workspace"}
-                                    onKeyDown={(e) => e.key === 'Enter' && !isWorkspaceLimitReached && handleCreateWorkspace()}
+                                    placeholder={isWorkspaceLimitReached ? "Assine para criar novo workspace" : "Nome do workspace"}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleCreateWorkspace()}
                                 />
-                                <Button onClick={handleCreateWorkspace} disabled={isWorkspaceLimitReached}>
-                                    <Plus className="w-4 h-4 mr-2" />
-                                    {isWorkspaceLimitReached ? 'Limite Atingido' : 'Criar'}
+                                <Button
+                                    onClick={handleCreateWorkspace}
+                                    className={isWorkspaceLimitReached ? "bg-amber-500 hover:bg-amber-600 text-white" : ""}
+                                >
+                                    {isWorkspaceLimitReached ? <Crown className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+                                    {isWorkspaceLimitReached ? 'Liberar Business' : 'Criar'}
                                 </Button>
                             </div>
                             {isWorkspaceLimitReached && (

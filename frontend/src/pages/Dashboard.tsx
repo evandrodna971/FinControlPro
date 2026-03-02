@@ -58,7 +58,6 @@ export default function Dashboard() {
         income_category_breakdown: []
     })
 
-    const [chartInterval, setChartInterval] = useState("monthly")
     const [savingsGoal, setSavingsGoal] = useState(5000)
     const [jointGoals, setJointGoals] = useState<any[]>([]) // Default goal
 
@@ -67,7 +66,7 @@ export default function Dashboard() {
             const [transRes, sumRes] = await Promise.all([
                 api.get<Transaction[]>('/transactions/', { params: { limit: 5, summary_view: true } }), // Get recent transactions with summary view
                 api.get<Summary>('/transactions/summary', {
-                    params: { month: selectedMonth, year: selectedYear, interval: chartInterval }
+                    params: { month: selectedMonth, year: selectedYear, interval: 'monthly' }
                 })
             ]);
             setTransactions(transRes.data);
@@ -105,7 +104,7 @@ export default function Dashboard() {
         fetchData();
         fetchJointGoals();
         fetchSettings();
-    }, [activeWorkspace, selectedMonth, selectedYear, chartInterval]);
+    }, [activeWorkspace, selectedMonth, selectedYear]);
 
     const handlePrevMonth = () => {
         if (selectedMonth === 1) {
@@ -139,16 +138,6 @@ export default function Dashboard() {
                 </div>
 
                 <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2">
-                    <select
-                        className="bg-background border rounded-xl px-3 py-1 text-sm h-10 shadow-sm focus:ring-2 focus:ring-primary outline-none"
-                        value={chartInterval}
-                        onChange={(e) => setChartInterval(e.target.value)}
-                    >
-                        <option value="weekly">Semanal</option>
-                        <option value="biweekly">Quinzenal</option>
-                        <option value="monthly">Mensal</option>
-                        <option value="yearly">Anual</option>
-                    </select>
                     <div className="flex items-center justify-between border rounded-xl p-1 bg-muted/20">
                         <Button onClick={handlePrevMonth} variant="ghost" size="icon" className="h-8 w-8 hover:bg-background">←</Button>
                         <span className="text-sm font-semibold px-4 min-w-[120px] text-center">

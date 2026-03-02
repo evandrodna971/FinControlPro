@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Plus, Trash2, Hash, ChevronRight, ChevronLeft, Check, Target, Wallet, Search } from 'lucide-react'
@@ -27,6 +28,7 @@ interface AddAssetDialogProps {
 }
 
 export function AddAssetDialog({ onAssetAdded, isDisabled }: AddAssetDialogProps) {
+    const navigate = useNavigate()
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
     const [step, setStep] = useState(1)
@@ -141,11 +143,16 @@ export function AddAssetDialog({ onAssetAdded, isDisabled }: AddAssetDialogProps
         <Dialog open={open} onOpenChange={(val) => { setOpen(val); if (!val) resetForm(); }}>
             <DialogTrigger asChild>
                 <Button
-                    disabled={isDisabled}
+                    onClick={(e) => {
+                        if (isDisabled) {
+                            e.preventDefault()
+                            navigate('/subscription')
+                        }
+                    }}
                     className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 transition-all active:scale-95 px-6 font-bold tracking-tight disabled:bg-slate-300 disabled:shadow-none"
-                    title={isDisabled ? "Limite de ativos atingido no plano Free/Trial" : ""}
+                    title={isDisabled ? "Clique para liberar mais ativos" : ""}
                 >
-                    <Plus className="mr-2 h-4 w-4" /> {isDisabled ? "Limite Atingido" : "Novo Ativo"}
+                    <Plus className="mr-2 h-4 w-4" /> {isDisabled ? "Liberar Mais Ativos" : "Novo Ativo"}
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[600px] w-[95%] p-0 overflow-hidden border-none shadow-2xl bg-slate-50 dark:bg-slate-950 max-h-[95vh] flex flex-col">
