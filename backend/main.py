@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from backend.rate_limiter import limiter
 from backend.database import engine, Base, create_tables
 from backend.routers import auth as auth_router
 from backend.routers import transactions as transactions_router
@@ -27,6 +30,9 @@ app = FastAPI(
     description="Backend for FinControl Pro SaaS",
     version="0.1.0"
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 import os
 

@@ -132,6 +132,7 @@ const PieChartContent = ({ data, colors, idPrefix }: { data: CategoryData[], col
                             startAngle={90}
                             endAngle={-270}
                             filter="url(#shadow)"
+                            minAngle={15}
                         >
                             {data.map((entry, index) => {
                                 return (
@@ -176,6 +177,7 @@ const PieChartContent = ({ data, colors, idPrefix }: { data: CategoryData[], col
                             startAngle={90}
                             endAngle={-270}
                             isAnimationActive={false}
+                            minAngle={15}
                         >
                             {data.map((_, index) => (
                                 <Cell key={`inner-cell-${index}`} fill="transparent" />

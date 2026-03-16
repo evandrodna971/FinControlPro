@@ -1,15 +1,16 @@
-from datetime import timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from .. import database, schemas, crud, auth as auth_service
+from ..rate_limiter import limiter
 
 router = APIRouter(
     tags=["Authentication"]
 )
 
 @router.post("/token", response_model=schemas.Token)
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(database.get_db)):
+@limiter.limit("5/minute")
+async def login_for_access_token(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(database.get_db)):
     user = crud.get_user_by_email(db, email=form_data.username)
     if not user or not crud.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
@@ -17,6 +18,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    from datetime import timedelta
     access_token_expires = timedelta(minutes=auth_service.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = auth_service.create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
@@ -24,7 +26,8 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/register", response_model=schemas.UserResponse)
-def register_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
+@limiter.limit("3/minute")
+def register_user(request: Request, user: schemas.UserCreate, db: Session = Depends(database.get_db)):
     db_user = crud.get_user_by_email(db, email=user.email)
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -34,12 +37,18 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(database.get_d
 async def read_users_me(current_user: schemas.UserResponse = Depends(auth_service.get_current_active_user)):
     return current_user
 @router.post("/forgot-password")
-async def forgot_password(email_data: schemas.UserResetRequest, db: Session = Depends(database.get_db)):
+@limiter.limit("3/minute")
+async def forgot_password(request: Request, email_data: schemas.UserResetRequest, db: Session = Depends(database.get_db)):
     user = crud.get_user_by_email(db, email=email_data.email)
-    if not user:
-        # Don't reveal user existence, but in this case user wants it
-        raise HTTPException(status_code=404, detail="Email not found")
     
+    # Generic success message to prevent user enumeration
+    success_message = {"message": "If this email is registered, you will receive a reset link shortly."}
+    
+    if not user:
+        # Don't reveal user existence, just return the fake success message
+        return success_message
+    
+    from datetime import timedelta
     # Generate a temporary token (reuse JWT logic for simplicity)
     reset_token = auth_service.create_access_token(
         data={"sub": user.email, "purpose": "reset"}, 
@@ -51,10 +60,11 @@ async def forgot_password(email_data: schemas.UserResetRequest, db: Session = De
     print(f"[MOCK EMAIL] Subject: Password Reset Request")
     print(f"[MOCK EMAIL] Link: http://localhost:5173/reset-password?token={reset_token}\n")
     
-    return {"message": "Reset link sent to email (check console/logs)"}
+    return success_message
 
 @router.post("/reset-password")
-async def reset_password(reset_data: schemas.UserPasswordReset, db: Session = Depends(database.get_db)):
+@limiter.limit("3/minute")
+async def reset_password(request: Request, reset_data: schemas.UserPasswordReset, db: Session = Depends(database.get_db)):
     email = auth_service.verify_token(reset_data.token) # Need to ensure verify_token handles this
     if not email:
         raise HTTPException(status_code=400, detail="Invalid or expired token")

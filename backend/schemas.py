@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 from datetime import datetime
 
@@ -6,7 +6,7 @@ class UserBase(BaseModel):
     email: EmailStr
 
 class UserCreate(UserBase):
-    password: str
+    password: str = Field(min_length=8)
     full_name: Optional[str] = None
     role: str = "individual"
 
@@ -28,7 +28,7 @@ class UserResetRequest(BaseModel):
 
 class UserPasswordReset(BaseModel):
     token: str
-    new_password: str
+    new_password: str = Field(min_length=8)
 
 class Token(BaseModel):
     access_token: str
