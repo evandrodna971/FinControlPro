@@ -18,7 +18,30 @@ if "sqlite" in SQLALCHEMY_DATABASE_URL:
         SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
     )
 else:
-    engine = create_engine(SQLALCHEMY_DATABASE_URL)
+    # Log the connection URL (hiding password) for debugging
+    hostname = "unknown"
+    try:
+        from urllib.parse import urlparse
+        import socket
+        parsed = urlparse(SQLALCHEMY_DATABASE_URL)
+        hostname = parsed.hostname
+        safe_url = f"{parsed.scheme}://{parsed.username}:****@{parsed.hostname}:{parsed.port}{parsed.path}"
+        print(f"Connecting to database: {safe_url}")
+        
+        # DNS Diagnosis
+        print(f"Diagnosing DNS for {hostname}...")
+        try:
+            ip = socket.gethostbyname(hostname)
+            print(f"DNS Success: {hostname} resolved to {ip}")
+        except Exception as dns_err:
+            print(f"DNS FAILURE: Could not resolve {hostname}: {dns_err}")
+            print("TIP: If you are using 'Internal Database URL', try switching to 'External Database URL' in Render settings.")
+            
+    except Exception as e:
+        print(f"Error during connection diagnosis: {e}")
+        
+    engine = create_engine(SQLALCHEMY_DATABASE_URL, pool_pre_ping=True)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
@@ -31,15 +54,16 @@ def get_db():
         db.close()
 
 def create_tables():
-    Base.metadata.create_all(bind=engine)
+    try:
+        print("Checking/Creating tables...")
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        print(f"CRITICAL ERROR: Failed to connect to database or create tables: {e}")
+        # Re-raise to ensure the app doesn't start in an inconsistent state
+        raise e
     
     # Auto-migration for new columns
     try:
-        from sqlalchemy import inspect # Import here is fine if indented, but better at top. 
-        # Actually I will keep it inside but indented correctly this time, 
-        # or just use inspect since I will add it to top imports.
-        # Let's clean up the duplicate try/except block that appeared in the view_file output too.
-        
         inspector = inspect(engine)
         
         # Categories table migrations
