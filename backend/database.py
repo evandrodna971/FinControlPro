@@ -11,7 +11,9 @@ SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{os.path.join(BA
 
 # Fix for Render: SQLAlchemy requires 'postgresql://', but Render provides 'postgres://'
 if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
-    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql+psycopg2://", 1)
+elif SQLALCHEMY_DATABASE_URL.startswith("postgresql://"):
+    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
 
 if "sqlite" in SQLALCHEMY_DATABASE_URL:
     engine = create_engine(
@@ -24,23 +26,29 @@ else:
         from urllib.parse import urlparse
         import socket
         parsed = urlparse(SQLALCHEMY_DATABASE_URL)
-        hostname = parsed.hostname
-        safe_url = f"{parsed.scheme}://{parsed.username}:****@{parsed.hostname}:{parsed.port}{parsed.path}"
+        hostname = parsed.hostname or "unknown"
+        safe_url = f"{parsed.scheme}://{parsed.username}:****@{hostname}:{parsed.port or 5432}{parsed.path}"
         print(f"Connecting to database: {safe_url}")
         
         # DNS Diagnosis
-        print(f"Diagnosing DNS for {hostname}...")
-        try:
-            ip = socket.gethostbyname(hostname)
-            print(f"DNS Success: {hostname} resolved to {ip}")
-        except Exception as dns_err:
-            print(f"DNS FAILURE: Could not resolve {hostname}: {dns_err}")
-            print("TIP: If you are using 'Internal Database URL', try switching to 'External Database URL' in Render settings.")
+        if hostname != "unknown":
+            print(f"Diagnosing DNS for {hostname}...")
+            try:
+                ip = socket.gethostbyname(hostname)
+                print(f"DNS Success: {hostname} resolved to {ip}")
+            except Exception as dns_err:
+                print(f"DNS FAILURE: Could not resolve {hostname}: {dns_err}")
+                print("TIP: If you are using 'Internal Database URL', try switching to 'External Database URL' in Render settings.")
             
     except Exception as e:
         print(f"Error during connection diagnosis: {e}")
         
-    engine = create_engine(SQLALCHEMY_DATABASE_URL, pool_pre_ping=True)
+    # Set connect_timeout to avoid hanging indefinitely
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL, 
+        pool_pre_ping=True,
+        connect_args={"connect_timeout": 10}
+    )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
